@@ -1,0 +1,15 @@
+{
+  "predict": {
+    "smiles": "CC(=O)OC1=CC=CC=C1C(=O)O"
+  },
+  "batch_predict": {
+    "smiles_list": [
+      "CC(=O)OC1=CC=CC=C1C(=O)O",
+      "O=C(O)c1ccccc1"
+    ]
+  },
+  "chat": {
+    "message": "Predict ADME properties for aspirin: CC(=O)OC1=CC=CC=C1C(=O)O"
+  }
+}
+

@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+pytest
+httpx2
+python-dotenv
+python-multipart
+admet-ai
+pandas
+numpy
+openai==2.45.0
+openai-agents==0.18.2

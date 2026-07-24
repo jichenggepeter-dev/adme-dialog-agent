@@ -1,0 +1,36 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+!frontend/.env.example
+
+# Python
+.venv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Frontend
+frontend/.next/
+frontend/node_modules/
+frontend/playwright-report/
+frontend/test-results/
+frontend/tsconfig.tsbuildinfo
+
+# Runtime and user data
+data/*.sqlite3
+data/*.sqlite3-*
+data/*.db
+data/jobs/
+data/uploads/
+data/demo-logs/
+*.log
+
+# Local artifacts
+backups/
+*.tmp
+.DS_Store

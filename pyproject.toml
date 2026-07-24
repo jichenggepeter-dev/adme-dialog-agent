@@ -1,0 +1,28 @@
+[project]
+name = "adme-dialog-agent"
+version = "0.1.0"
+description = "Local-first, human-in-the-loop workspace for exploring computational ADME/ADMET predictions."
+requires-python = ">=3.11"
+readme = "README.md"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "python-dotenv",
+    "admet-ai",
+    "pandas",
+    "numpy",
+    "openai==2.45.0",
+    "openai-agents==0.18.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx2"]
+rdkit = ["rdkit"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "agent_llm_integration: requires the local Codex OpenAI-compatible API",
+]

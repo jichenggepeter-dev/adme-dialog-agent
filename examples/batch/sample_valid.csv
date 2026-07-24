@@ -1,0 +1,4 @@
+compound_id,compound_name,smiles
+CMP-001,Aspirin,CC(=O)OC1=CC=CC=C1C(=O)O
+CMP-002,Benzoic acid,O=C(O)c1ccccc1
+CMP-003,Ethanol,CCO
