@@ -5,6 +5,12 @@ ADME/ADMET predictions through visual and controlled conversational workflows.
 
 **Research Preview · v0.1.0 · MIT · Local-first**
 
+[Quick start](#quick-start) ·
+[Scientific responsibility](#scientific-responsibility) ·
+[Documentation](#documentation) ·
+[Contributing](#contributing) ·
+[Roadmap](ROADMAP.md)
+
 ![ADME Dialog Agent single-compound workspace](docs/images/single-reference-desktop.png)
 
 > **Research Preview:** This project supports education, software development,
@@ -65,6 +71,22 @@ Input compound
 -> filter or compare compatible endpoints
 -> export results
 ```
+
+## Human-Agent boundary
+
+| Agent behavior | Policy |
+| --- | --- |
+| Explain endpoint metadata and visible page state | Allowed automatically |
+| Search, filter, select, and navigate | Allowed when reversible |
+| Resolve a compound and show the resulting structure | Allowed; the user confirms the structure |
+| Run a prediction or batch job | Explicit confirmation required |
+| Export results or delete local state | Explicit confirmation required |
+| Compare compatible raw endpoint values | Allowed without ranking or a winner |
+| Make clinical, safety, regulatory, or candidate-selection claims | Prohibited |
+| Run arbitrary code, shell commands, or file operations | Prohibited |
+
+The Agent assists with workflow and understanding. The user remains responsible
+for scientific interpretation and every downstream decision.
 
 ## Quick start
 
