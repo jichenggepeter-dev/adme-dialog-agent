@@ -1,0 +1,56 @@
+name: Scientific metadata validation
+description: Propose an evidence-backed correction to endpoint metadata or scientific wording.
+title: "[Scientific validation]: "
+labels:
+  - scientific-validation
+body:
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint or scientific statement
+      placeholder: e.g. Caco2_Wang
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current behavior or metadata
+      description: Quote the relevant project field or wording and identify its location.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed correction
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Primary or authoritative evidence
+      description: Provide a DOI, model documentation, dataset definition, or other authoritative source. An LLM response is not evidence.
+    validations:
+      required: true
+  - type: dropdown
+    id: metadata_type
+    attributes:
+      label: Metadata type
+      options:
+        - Definition
+        - Unit
+        - Output type or class semantics
+        - Model or dataset provenance
+        - Comparison wording
+        - Limitation or disclaimer
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Scientific boundaries
+      options:
+        - label: The correction does not turn a computational prediction into an experimental, clinical, regulatory, or safety conclusion.
+          required: true
+        - label: I have separated verified facts from inference or unavailable information.
+          required: true

@@ -1,0 +1,61 @@
+name: Feature request
+description: Propose a user or contributor outcome before proposing implementation.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: user_problem
+    attributes:
+      label: User or contributor problem
+      description: Who has the problem, when does it occur, and what do they do today?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe what success looks like without prescribing code.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: Describe a possible solution and the smallest useful scope.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Contribution lane
+      options:
+        - Scientific correctness and metadata
+        - Agent safety and evaluation
+        - Product, frontend, and accessibility
+        - Backend and developer experience
+        - Cross-cutting
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Scientific, privacy, and Agent-autonomy impact
+      description: Explain external data flow, confirmation changes, new claims, storage, deletion, or permissions.
+    validations:
+      required: true
+  - type: checkboxes
+    id: non_goals
+    attributes:
+      label: Positioning checks
+      options:
+        - label: The proposal does not make clinical, regulatory, safety, or candidate-selection claims.
+          required: true
+        - label: Any expanded Agent autonomy will include explicit safety and failure tests.
+          required: true
+        - label: The proposal preserves a no-key mock development path.
+          required: true
