@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "adme-dialog-agent"
 version = "0.1.0"
@@ -9,6 +13,8 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "python-dotenv",
+    "python-multipart",
+    "httpx>=0.23.0,<1",
     "admet-ai",
     "pandas",
     "numpy",
@@ -26,3 +32,6 @@ pythonpath = ["."]
 markers = [
     "agent_llm_integration: requires the local Codex OpenAI-compatible API",
 ]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
