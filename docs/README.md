@@ -7,6 +7,7 @@ implementation records.
 
 - [Project positioning](project-positioning.md)
 - [Testing guide](testing-guide.md)
+- [Frontend dependency security](frontend-dependency-security.md)
 - [Issue #1 beginner packaging tutorial](issue-1-python-packaging-tutorial.md)
 - [Endpoint registry](endpoint-registry.md)
 - [Endpoint metadata provenance](endpoint-metadata-provenance.md)
