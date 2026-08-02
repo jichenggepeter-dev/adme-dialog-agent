@@ -1,6 +1,10 @@
 PYTHON := .venv/bin/python
 PIP := .venv/bin/pip
 PYTEST := .venv/bin/pytest
+BACKEND_HOST ?= 127.0.0.1
+BACKEND_PORT ?= 8000
+FRONTEND_HOST ?= 127.0.0.1
+FRONTEND_PORT ?= 3000
 
 .PHONY: setup test test-unit test-api test-agent test-agent-integration smoke-mock smoke-real smoke-agent-llm backend frontend dev batch-demo check
 
@@ -35,10 +39,10 @@ smoke-agent-llm:
 	$(PYTHON) scripts/smoke_test_agent_llm.py
 
 backend:
-	$(PYTHON) -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+	$(PYTHON) -m uvicorn app.main:app --reload --reload-dir app --host $(BACKEND_HOST) --port $(BACKEND_PORT)
 
 frontend:
-	cd frontend && npm run dev
+	cd frontend && npm run dev -- --hostname $(FRONTEND_HOST) --port $(FRONTEND_PORT)
 
 dev:
 	./scripts/dev.sh

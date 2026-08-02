@@ -13,7 +13,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-API_BASE_URL = os.getenv("NEXT_PUBLIC_API_BASE_URL", "http://127.0.0.1:8000")
+BACKEND_PORT = int(os.getenv("BACKEND_PORT", "8000"))
+FRONTEND_PORT = int(os.getenv("FRONTEND_PORT", "3000"))
+API_BASE_URL = os.getenv("NEXT_PUBLIC_API_BASE_URL", f"http://127.0.0.1:{BACKEND_PORT}")
 REQUIRED_PACKAGES = ("fastapi", "pydantic", "uvicorn", "admet-ai")
 
 
@@ -80,7 +82,7 @@ def main() -> int:
     else:
         report("WARN", f"Backend is not reachable at {API_BASE_URL}")
 
-    for port in (3000, 8000):
+    for port in (FRONTEND_PORT, BACKEND_PORT):
         available = port_is_available(port)
         report("PASS" if available else "INFO", f"Port {port} is {'available' if available else 'in use'}")
 
