@@ -3,6 +3,13 @@
 .env.*
 !.env.example
 !frontend/.env.example
+.npmrc
+.pypirc
+.netrc
+*.pem
+*.key
+*.p12
+*.pfx
 
 # Python
 .venv/
@@ -25,10 +32,21 @@ frontend/tsconfig.tsbuildinfo
 data/*.sqlite3
 data/*.sqlite3-*
 data/*.db
+data/**/*.sqlite3
+data/**/*.sqlite3-*
+data/**/*.db
 data/jobs/
 data/uploads/
 data/demo-logs/
+data/exports/
+data/sessions/
 *.log
+
+# Browser sessions and authentication state
+.auth/
+playwright/.auth/
+storage-state*.json
+cookies*.json
 
 # Local artifacts
 backups/

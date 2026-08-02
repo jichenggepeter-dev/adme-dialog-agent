@@ -41,6 +41,8 @@ remain the executable source of truth when a document is accidentally stale.
 
 - [Frontend dependency security](frontend-dependency-security.md)
 - [Clean-clone verification — 2026-08-02](release/clean-clone-verification-2026-08-02.md)
+- [Pre-release security and rights review — 2026-08-02](release/pre-release-review-2026-08-02.md)
+- [Repository asset provenance](release/asset-provenance.md)
 - [Issue #1 beginner packaging tutorial](issue-1-python-packaging-tutorial.md)
 
 ## Historical records retained in place
