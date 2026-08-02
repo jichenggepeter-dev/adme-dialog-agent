@@ -12,11 +12,17 @@ the project.
 - [x] Define product positioning and non-goals.
 - [x] Remove local secrets and runtime data from the publishable file set.
 - [x] Add license, contribution, conduct, security, and third-party documents.
-- [ ] Curate current documentation and archive historical implementation notes.
-- [ ] Add GitHub Actions for mock backend and frontend checks.
-- [ ] Verify setup from a clean clone on a second environment.
-- [ ] Complete a pre-publication secret and asset-rights review.
+- [x] Curate current documentation and classify historical implementation notes.
+- [x] Add GitHub Actions for mock backend and frontend checks.
+- [x] Verify setup from a clean clone on a second environment.
+- [x] Complete a pre-publication secret and asset-rights review.
+- [ ] Add a safe, deterministic streaming Assistant flow.
+- [ ] Add a small evidence RAG flow with visible source citations.
+- [ ] Complete the product-design review and course demonstration evidence.
 - [ ] Publish the initial baseline with an honest release date.
+
+The [detailed roadmap](docs/roadmap-detailed-requirements.md) defines the scope,
+non-goals, acceptance criteria, and post-deadline ideas behind these milestones.
 
 ## v0.2.0: Trust and control
 
@@ -62,3 +68,6 @@ The project will consider `1.0` only after:
 - a general scientific-Agent framework or plugin marketplace;
 - a hosted multi-user SaaS product;
 - default telemetry or cloud synchronization.
+
+GraphRAG, graph/loop orchestration, and multi-Agent execution are research ideas
+for after the small RAG baseline is evaluated. They are not v0.1 commitments.
