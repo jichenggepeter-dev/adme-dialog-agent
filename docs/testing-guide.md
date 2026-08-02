@@ -31,16 +31,26 @@ dependencies or `app/tools/admet_predictor.py`.
 ## Recommended workflow
 
 ```bash
-make test
-make smoke-real
-make backend
-# Check http://127.0.0.1:8000/docs or use curl.
-make dev
-# Exercise the browser flow at http://localhost:3000.
+make check
+ADME_MOCK_MODE=true make dev
+# Exercise /single, /batch, and /about at http://localhost:3000.
 ```
 
 Run `make test-unit` for Python logic and `make test-api` for FastAPI routes.
 Run `make check` for the broad local check after the frontend is installed.
+
+Real model verification is a separate, opt-in integration check because it can
+download or load model assets and takes substantially longer:
+
+```bash
+make smoke-real
+```
+
+If ports 3000 or 8000 are already in use, keep the two services aligned with:
+
+```bash
+ADME_MOCK_MODE=true BACKEND_PORT=8100 FRONTEND_PORT=3100 make dev
+```
 
 ## Reading failures
 

@@ -6,7 +6,8 @@ Agent engineering, product design, accessibility, testing, and documentation.
 
 Please read the [Code of Conduct](CODE_OF_CONDUCT.md) and
 [project positioning](docs/project-positioning.md) before starting a
-substantial change.
+substantial change. The [documentation index](docs/README.md) identifies which
+documents are current contracts and which are historical records.
 
 ## Find or propose work
 
@@ -68,14 +69,11 @@ variable for a secret.
 Run the narrowest tests for your change, then the relevant broader checks:
 
 ```bash
-make test
-
-cd frontend
-npm run lint
-npm run typecheck
-npm run test
-npm run build
+make check
 ```
+
+`make check` validates repository-local documentation links, backend tests,
+frontend lint and types, frontend unit tests, and the production build.
 
 Use Playwright for changed user workflows:
 

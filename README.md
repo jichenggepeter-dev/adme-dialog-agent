@@ -96,6 +96,14 @@ Prerequisites:
 - Node.js 20.9 or newer
 - npm
 
+Check the versions before installing:
+
+```bash
+python3 --version
+node --version
+npm --version
+```
+
 ```bash
 # After cloning the repository:
 cd adme-dialog-agent
@@ -103,6 +111,14 @@ cp .env.example .env
 make setup
 export ADME_MOCK_MODE=true
 make dev
+```
+
+If `python3 --version` is below 3.11 but a newer interpreter is installed,
+create the virtual environment with it before `make setup`, for example:
+
+```bash
+python3.13 -m venv .venv
+make setup
 ```
 
 Open:
@@ -237,6 +253,15 @@ make dev
 Ctrl+C shuts down both services. Run `make backend` or `make frontend` when only
 one service is needed.
 
+The default ports are 8000 for FastAPI and 3000 for Next.js. To avoid a local
+port conflict without stopping another project, choose both ports together:
+
+```bash
+ADME_MOCK_MODE=true BACKEND_PORT=8100 FRONTEND_PORT=3100 make dev
+```
+
+The launcher automatically points the frontend at the selected backend port.
+
 ### macOS background demo mode
 
 To keep the frontend and backend running after the terminal closes, use the
@@ -360,8 +385,8 @@ have reviewed that provider's privacy and retention terms. See
 
 - **Virtual environment not active:** prefer `make` commands, which call
   `.venv/bin/python` directly, or run `source .venv/bin/activate`.
-- **Port already in use:** stop the service using port 3000 or 8000 before
-  running `make dev`.
+- **Port already in use:** either stop the service using port 3000 or 8000, or
+  run `ADME_MOCK_MODE=true BACKEND_PORT=8100 FRONTEND_PORT=3100 make dev`.
 - **Backend unavailable:** run `make backend`, then check `/status`.
 - **CORS failure:** use `http://localhost:3000` or `http://127.0.0.1:3000` and
   keep `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000`.
@@ -370,7 +395,7 @@ have reviewed that provider's privacy and retention terms. See
   in the terminal.
 - **First prediction slow:** real mode loads model assets on first use; wait for
   the request rather than submitting again.
-- **Node version mismatch:** Next.js 16.2.10 requires Node 20.9 or newer.
+- **Node version mismatch:** Next.js 16 requires Node 20.9 or newer.
 - **Frontend environment missing:** copy `frontend/.env.example` to
   `frontend/.env.local` when using a non-default backend URL.
 - **Mock mode unexpectedly active:** set `ADME_MOCK_MODE=false` in `.env` or
