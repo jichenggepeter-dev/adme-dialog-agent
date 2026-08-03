@@ -184,16 +184,22 @@ class AgentRepository:
             return dict(row)
 
     def add_message(
-        self, session_id: str, role: str, content: str, metadata: dict | None = None
+        self,
+        session_id: str,
+        role: str,
+        content: str,
+        metadata: dict | None = None,
+        *,
+        message_id: str | None = None,
     ) -> dict:
         self.get_session(session_id)
-        message_id = f"msg_{uuid4().hex}"
+        stored_message_id = message_id or f"msg_{uuid4().hex}"
         created = _now()
         with self.connection() as connection:
             connection.execute(
                 "INSERT INTO agent_messages VALUES (?, ?, ?, ?, ?, ?)",
                 (
-                    message_id,
+                    stored_message_id,
                     session_id,
                     role,
                     content,
@@ -203,7 +209,7 @@ class AgentRepository:
             )
             connection.commit()
         return {
-            "message_id": message_id,
+            "message_id": stored_message_id,
             "session_id": session_id,
             "role": role,
             "content": content,

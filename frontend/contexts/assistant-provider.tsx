@@ -2,15 +2,16 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { createAgentSession, decideConfirmation, decidePendingAction, getAgentSession, getPredictionResource, sendAgentMessage, AgentApiError } from "@/lib/agent-api";
-import type { AgentMessage, AgentResponse, Confirmation, PageContext, PendingAction, StructuredPayload, ToolActivity } from "@/lib/agent-types";
+import { createAgentSession, decideConfirmation, decidePendingAction, getPredictionResource, streamAgentMessage, AgentApiError } from "@/lib/agent-api";
+import type { AgentMessage, AgentResponse, AgentStreamEvent, AssistantStreamStatus, Confirmation, PageContext, PendingAction, StructuredPayload, ToolActivity } from "@/lib/agent-types";
+import { applyStreamEvent, finalizeStreamedMessage } from "@/lib/assistant-stream-state";
 import { getAssistantPageContext } from "@/lib/assistant-page-state";
 import { executeUIAction, shouldCollapseForAction, type UIActionExecutionResult } from "@/lib/ui-action-dispatcher";
 import { transitionDelay, type ActionPhase } from "@/components/assistant/assistant-action-transition";
 import type { PredictionResponse } from "@/lib/types";
 
 export type ViewMessage = AgentMessage & { payloads?: StructuredPayload[]; tools?: ToolActivity[] };
-type AssistantState = { open: boolean; closing: boolean; ready: boolean; loading: boolean; messages: ViewMessage[]; pending: Confirmation | null; pendingAction: PendingAction | null; error: AgentApiError | null; stateVersion: number; actionPhase: ActionPhase; actionResult: UIActionExecutionResult | null; guidedMode: boolean; guidedPrediction: PredictionResponse | null; send: (text: string) => Promise<void>; decide: (decision: "approve" | "reject") => Promise<void>; decideAction: (decision: "approve" | "reject") => Promise<void>; setOpen: (value: boolean) => void; exitGuidedMode: () => void; clearError: () => void };
+type AssistantState = { open: boolean; closing: boolean; ready: boolean; loading: boolean; messages: ViewMessage[]; pending: Confirmation | null; pendingAction: PendingAction | null; error: AgentApiError | null; stateVersion: number; streamStatus: AssistantStreamStatus; actionPhase: ActionPhase; actionResult: UIActionExecutionResult | null; guidedMode: boolean; guidedPrediction: PredictionResponse | null; send: (text: string) => Promise<void>; cancelStream: () => void; decide: (decision: "approve" | "reject") => Promise<void>; decideAction: (decision: "approve" | "reject") => Promise<void>; setOpen: (value: boolean) => void; exitGuidedMode: () => void; clearError: () => void };
 const Context = createContext<AssistantState | null>(null);
 
 function routeContext(pathname: string): PageContext {
@@ -26,6 +27,8 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const [sessionId, setSessionId] = useState<string | null>(null); const [stateVersion, setStateVersion] = useState(0);
   const [messages, setMessages] = useState<ViewMessage[]>([]); const [pending, setPending] = useState<Confirmation | null>(null); const [error, setError] = useState<AgentApiError | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [streamStatus, setStreamStatus] = useState<AssistantStreamStatus>("idle");
+  const streamAbortRef = useRef<AbortController | null>(null);
   const [actionPhase, setActionPhase] = useState<ActionPhase>("idle"); const [actionResult, setActionResult] = useState<UIActionExecutionResult | null>(null);
   const [guidedMode, setGuidedMode] = useState(false); const [guidedPrediction, setGuidedPrediction] = useState<PredictionResponse | null>(null);
 
@@ -45,6 +48,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => () => { if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current); }, []);
+  useEffect(() => () => streamAbortRef.current?.abort(), []);
 
   useEffect(() => { let active = true; (async () => {
     try {
@@ -61,9 +65,11 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     return () => document.body.classList.remove("assistant-docked-active");
   }, [closing, open, pathname]);
 
-  const ingest = useCallback(async (response: AgentResponse) => {
+  const ingest = useCallback(async (response: AgentResponse, replaceStreamedMessage = false) => {
     setStateVersion(response.state_version); setPending(response.pending_confirmation); setPendingAction(response.pending_action);
-    setMessages((items) => [...items, { message_id: response.message_id, session_id: sessionId ?? "", role: "assistant", content: response.text, created_at: new Date().toISOString(), metadata: {}, payloads: response.structured_payloads, tools: response.tool_activity }]);
+    setMessages((items) => replaceStreamedMessage
+      ? finalizeStreamedMessage(items, sessionId ?? "", response)
+      : [...items, { message_id: response.message_id, session_id: sessionId ?? "", role: "assistant", content: response.text, created_at: new Date().toISOString(), metadata: {}, payloads: response.structured_payloads, tools: response.tool_activity }]);
     if (!sessionId) return;
     if (response.pending_confirmation) {
       setActionPhase("collapsing_for_action"); setOpen(false);
@@ -90,38 +96,46 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router, sessionId, setOpen]);
 
-  const send = useCallback(async (text: string) => { if (!sessionId || loading || !text.trim()) return; setLoading(true); setError(null);
+  const send = useCallback(async (text: string) => { if (!sessionId || loading || !text.trim()) return; setLoading(true); setError(null); setStreamStatus("connecting");
     setMessages((items) => [...items, { message_id: crypto.randomUUID(), session_id: sessionId, role: "user", content: text.trim(), created_at: new Date().toISOString(), metadata: {} }]);
+    const controller = new AbortController();
+    streamAbortRef.current = controller;
     try {
       const fallback = routeContext(window.location.pathname);
       const pageContext = getAssistantPageContext(fallback);
-      try {
-        await ingest(await sendAgentMessage(sessionId, text.trim(), stateVersion, pageContext));
-      } catch (caught) {
-        if (!(caught instanceof AgentApiError) || caught.code !== "ACTION_STALE") throw caught;
-        const refreshed = await getAgentSession(sessionId);
-        setStateVersion(refreshed.state_version);
-        await ingest(await sendAgentMessage(sessionId, text.trim(), refreshed.state_version, pageContext));
-      }
-    } catch (caught) { setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "The Assistant request failed.")); } finally { setLoading(false); }
+      const onEvent = (event: AgentStreamEvent) => {
+        setMessages((items) => applyStreamEvent(items, event));
+        if (event.type === "tool_started" || event.type === "tool_completed") setStreamStatus("tool");
+        else if (event.type === "confirmation_required") setStreamStatus("waiting_confirmation");
+        else if (event.type === "error") setStreamStatus("failed");
+        else if (event.type === "response_completed") setStreamStatus("completed");
+        else setStreamStatus("generating");
+      };
+      const response = await streamAgentMessage(sessionId, text.trim(), stateVersion, pageContext, { signal: controller.signal, onEvent });
+      await ingest(response, true);
+      setStreamStatus(response.pending_confirmation || response.pending_action ? "waiting_confirmation" : "completed");
+    } catch (caught) { setStreamStatus("failed"); setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "The Assistant request failed.")); } finally { streamAbortRef.current = null; setLoading(false); }
   }, [ingest, loading, sessionId, stateVersion]);
 
+  const cancelStream = useCallback(() => { streamAbortRef.current?.abort(); }, []);
+
   const decide = useCallback(async (decision: "approve" | "reject") => { if (!sessionId || !pending || loading) return; setLoading(true); setError(null);
-    try { await ingest(await decideConfirmation(sessionId, pending.confirmation_id, decision, stateVersion)); if (decision === "reject") setGuidedMode(false); } catch (caught) { setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "Confirmation failed.")); } finally { setLoading(false); }
+    try { await ingest(await decideConfirmation(sessionId, pending.confirmation_id, decision, stateVersion)); setStreamStatus("completed"); if (decision === "reject") setGuidedMode(false); } catch (caught) { setStreamStatus("failed"); setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "Confirmation failed.")); } finally { setLoading(false); }
   }, [ingest, loading, pending, sessionId, stateVersion]);
 
   const decideAction = useCallback(async (decision: "approve" | "reject") => { if (!sessionId || !pendingAction || loading) return; setLoading(true); setError(null);
     try {
       const response = await decidePendingAction(sessionId, pendingAction.action_id, decision, stateVersion);
       await ingest(response);
+      setStreamStatus("completed");
       if (decision === "approve" && pendingAction.action_type === "run_batch_job") {
         const jobId = response.structured_payloads.find((item) => item.type === "batch_summary")?.data.job_id;
         if (typeof jobId === "string" && jobId) router.push(`/batch/${encodeURIComponent(jobId)}`);
       }
-    } catch (caught) { setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "Batch action confirmation failed.")); } finally { setLoading(false); }
+    } catch (caught) { setStreamStatus("failed"); setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "Batch action confirmation failed.")); } finally { setLoading(false); }
   }, [ingest, loading, pendingAction, router, sessionId, stateVersion]);
 
-  const value = useMemo(() => ({ open, closing, ready, loading, messages, pending, pendingAction, error, stateVersion, actionPhase, actionResult, guidedMode, guidedPrediction, send, decide, decideAction, setOpen, exitGuidedMode: () => setGuidedMode(false), clearError: () => setError(null) }), [open, closing, ready, loading, messages, pending, pendingAction, error, stateVersion, actionPhase, actionResult, guidedMode, guidedPrediction, send, decide, decideAction, setOpen]);
+  const value = useMemo(() => ({ open, closing, ready, loading, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, send, cancelStream, decide, decideAction, setOpen, exitGuidedMode: () => setGuidedMode(false), clearError: () => setError(null) }), [open, closing, ready, loading, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, send, cancelStream, decide, decideAction, setOpen]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useAssistant() { const value = useContext(Context); if (!value) throw new Error("useAssistant must be inside AssistantProvider"); return value; }

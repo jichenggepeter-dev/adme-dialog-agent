@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import re
+from uuid import uuid4
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import StreamingResponse
 
 from app.agent_runtime.contracts import (
     AgentChatRequest,
@@ -18,6 +21,7 @@ from app.agent_runtime.contracts import (
 from app.agent_runtime.errors import AgentCoreError
 from app.agent_runtime.repositories import AgentRepository
 from app.agent_runtime.runtime import AgentRuntime, default_repository_path
+from app.agent_runtime.streaming import STREAM_MEDIA_TYPE, stream_agent_chat
 from app.settings import is_agent_enabled
 
 
@@ -64,6 +68,29 @@ async def agent_chat(request: AgentChatRequest) -> dict:
     return await get_agent_runtime().chat(request)
 
 
+@router.post("/chat/stream")
+async def agent_chat_stream(
+    request: AgentChatRequest,
+    http_request: Request,
+) -> StreamingResponse:
+    require_agent_enabled()
+    correlation_id = _correlation_id(http_request)
+    message_id = f"msg_{uuid4().hex}"
+    return StreamingResponse(
+        stream_agent_chat(
+            get_agent_runtime(),
+            request,
+            message_id=message_id,
+            correlation_id=correlation_id,
+        ),
+        media_type=STREAM_MEDIA_TYPE,
+        headers={
+            "Cache-Control": "no-store",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @router.post("/confirm", response_model=AgentChatResponse)
 def agent_confirm(request: ConfirmationRequest) -> dict:
     require_agent_enabled()
@@ -106,3 +133,10 @@ def _session_contract(session: dict) -> dict:
             "state_version",
         )
     }
+
+
+def _correlation_id(request: Request) -> str:
+    supplied = request.headers.get("X-Correlation-ID", "")
+    if re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", supplied):
+        return supplied
+    return uuid4().hex

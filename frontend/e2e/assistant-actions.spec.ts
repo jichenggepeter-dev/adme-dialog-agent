@@ -43,15 +43,22 @@ test("applies failed batch filter once", async ({ page }) => {
 });
 
 test("renders Chinese markdown without raw stars and rejects unknown action", async ({ page }) => {
-  await page.route("http://127.0.0.1:8000/agent/chat", async (route) => {
+  await page.route("http://127.0.0.1:8000/agent/chat/stream", async (route) => {
     const request = route.request().postDataJSON();
     const invalid = request.message === "测试未知动作";
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ message_id: invalid ? "msg_bad" : "msg_markdown", text: "下面是 **DILI 模型信息**：\n\n- 元数据部分验证", structured_payloads: [], pending_confirmation: null, tool_activity: [], ui_action_proposals: invalid ? [{ type: "EVAL_JAVASCRIPT", action_id: "bad", session_id: request.session_id, target_route: "/single", expected_state_version: request.expected_state_version, payload: {} }] : [], warnings: [], state_version: request.expected_state_version }) });
+    const correlationId = route.request().headers()["x-correlation-id"];
+    const common = { version: 1, session_id: request.session_id, message_id: invalid ? "msg_bad" : "msg_markdown", correlation_id: correlationId };
+    const events = [
+      { ...common, type: "heartbeat", sequence: 0 },
+      { ...common, type: "message_delta", sequence: 1, delta: "下面是 **DILI 模型信息**：\n\n- 元数据部分验证" },
+      { ...common, type: "response_completed", sequence: 2, structured_payloads: [], pending_confirmation: null, pending_action: null, tool_activity: [], ui_action_proposals: invalid ? [{ type: "EVAL_JAVASCRIPT", action_id: "bad", session_id: request.session_id, target_route: "/single", expected_state_version: request.expected_state_version, payload: {} }] : [], warnings: [], state_version: request.expected_state_version },
+    ];
+    await route.fulfill({ status: 200, contentType: "application/x-ndjson", body: events.map((event) => JSON.stringify(event)).join("\n") + "\n" });
   });
   await page.goto("/single"); await openAssistant(page);
   await page.getByLabel("Message ADME Assistant").fill("测试格式"); await page.getByRole("button", { name: "Send message" }).click();
   await expect(page.locator("strong", { hasText: "DILI 模型信息" })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "ADME Assistant" })).not.toContainText("**");
   await page.getByLabel("Message ADME Assistant").fill("测试未知动作"); await page.getByRole("button", { name: "Send message" }).click();
-  await expect(page.getByText("The Agent returned data that did not match the client contract.")).toBeVisible();
+  await expect(page.getByText("The Assistant stream contained an invalid or unknown event.")).toBeVisible();
 });
