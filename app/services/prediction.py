@@ -24,7 +24,11 @@ class PredictionServiceError(RuntimeError):
         self.validation = validation
 
 
-def predict_single_smiles(smiles: str) -> dict[str, Any]:
+def predict_single_smiles(
+    smiles: str,
+    *,
+    force_mock: bool = False,
+) -> dict[str, Any]:
     """Run the existing deterministic prediction pipeline without chat language."""
     validation = validate_smiles(smiles)
     if not validation["is_valid"]:
@@ -38,14 +42,19 @@ def predict_single_smiles(smiles: str) -> dict[str, Any]:
         "input_smiles"
     ].strip()
     try:
-        raw_predictions = predict_one(prediction_smiles)
+        raw_predictions = (
+            predict_one(prediction_smiles, force_mock=True)
+            if force_mock
+            else predict_one(prediction_smiles)
+        )
     except ADMETPredictionError as exc:
         raise PredictionServiceError(exc.code, str(exc), validation=validation) from exc
 
     grouped = group_predictions(raw_predictions)
-    status = predictor_status()
+    status = predictor_status(force_mock=True) if force_mock else predictor_status()
     warnings: list[str] = []
-    if is_mock_mode():
+    mock_mode = force_mock or is_mock_mode()
+    if mock_mode:
         warnings.append(
             "Mock predictions are deterministic test data, not ADMET-AI model output."
         )
@@ -58,7 +67,7 @@ def predict_single_smiles(smiles: str) -> dict[str, Any]:
         "raw_predictions": raw_predictions,
         "summary": generate_summary(grouped),
         "disclaimer": DISCLAIMER,
-        "prediction_mode": "mock" if is_mock_mode() else "real",
+        "prediction_mode": "mock" if mock_mode else "real",
         "model_metadata": {
             "model_name": status["model_name"],
             "model_version": status["model_version"],

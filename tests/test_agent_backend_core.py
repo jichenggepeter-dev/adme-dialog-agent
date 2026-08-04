@@ -180,6 +180,7 @@ def test_tool_allowlist_contains_no_arbitrary_capabilities() -> None:
         "predict_single_compound",
         "get_prediction_results",
         "explain_endpoint",
+        "search_adme_evidence",
         "get_model_information",
         "get_batch_job_status",
         "get_batch_errors",

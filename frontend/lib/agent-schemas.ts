@@ -245,7 +245,37 @@ export const uiActionSchema = z.discriminatedUnion("type", [
     .strict(),
 ]);
 
-export const structuredPayloadSchema = z
+const evidenceCitationSchema = z
+  .object({
+    source_id: z.string().min(1),
+    title: z.string().min(1),
+    organization: z.string().min(1),
+    url: z.string().url(),
+    document_date: z.string().min(1),
+    version: z.string().min(1),
+    status: z.enum(["current", "superseded", "draft"]),
+    captured_at: z.string().min(1),
+    section: z.string().min(1),
+    page: z.union([z.number().int().positive(), z.string().min(1)]).nullable(),
+    chunk_id: z.string().min(1),
+    excerpt: z.string().min(1),
+  })
+  .strict();
+
+const evidenceAnswerSchema = z
+  .object({
+    query: z.string().min(1),
+    status: z.enum(["supported", "partial", "conflicting", "no_evidence", "prohibited", "stale_only"]),
+    availability: z.enum(["available", "unavailable"]),
+    assistant_summary: z.string().min(1),
+    claims: z.array(z.object({ text: z.string().min(1), evidence: z.array(evidenceCitationSchema).min(1).max(5) }).strict()).max(5),
+    evidence: z.array(evidenceCitationSchema).max(5),
+    source_count: z.number().int().min(0).max(5),
+    warnings: z.array(z.string()).max(5),
+  })
+  .strict();
+
+const generalStructuredPayloadSchema = z
   .object({
     type: z.enum([
       "none",
@@ -263,6 +293,11 @@ export const structuredPayloadSchema = z
     data: record,
   })
   .strict();
+
+export const structuredPayloadSchema = z.union([
+  z.object({ type: z.literal("evidence_answer"), data: evidenceAnswerSchema }).strict(),
+  generalStructuredPayloadSchema,
+]);
 
 export const toolActivitySchema = z
   .object({
@@ -332,6 +367,8 @@ const streamCompoundPayloadSchema = z
     warnings: z.array(z.string().max(500)).max(20),
     compound_id: z.string().min(1).max(128),
     input_quality: inputQualitySchema,
+    agent_provider_mode: z.literal("mock").optional(),
+    mock_catalog_version: z.literal(1).optional(),
   })
   .strict();
 

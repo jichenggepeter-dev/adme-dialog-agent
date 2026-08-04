@@ -16,7 +16,7 @@ from openai import (
     AuthenticationError,
 )
 
-from app.settings import AgentSettings
+from app.settings import AgentSettings, AgentSettingsError
 
 
 logger = logging.getLogger("app.agent_audit")
@@ -38,6 +38,10 @@ class AgentProvider:
 
 def create_agent_provider(settings: AgentSettings) -> AgentProvider:
     """Build the SDK Responses adapter without creating a product Agent."""
+    if settings.provider_mode != "live":
+        raise AgentSettingsError(
+            "The OpenAI-compatible provider is available only in live mode."
+        )
     set_tracing_disabled(settings.hosted_tracing_disabled)
     timeout = httpx.Timeout(
         connect=settings.connect_timeout_seconds,

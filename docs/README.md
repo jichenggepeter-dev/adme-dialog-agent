@@ -26,6 +26,8 @@ remain the executable source of truth when a document is accidentally stale.
 - [Endpoint registry](endpoint-registry.md)
 - [Endpoint metadata provenance](endpoint-metadata-provenance.md)
 - [Computational summary rules](computational-summary-rules.md)
+- [ADME evidence RAG](evidence-rag.md)
+- [Keyless PR Review App](review-app.md)
 
 ## Current Agent contracts
 
@@ -42,8 +44,11 @@ remain the executable source of truth when a document is accidentally stale.
 - [Frontend dependency security](frontend-dependency-security.md)
 - [Clean-clone verification — 2026-08-02](release/clean-clone-verification-2026-08-02.md)
 - [Pre-release security and rights review — 2026-08-02](release/pre-release-review-2026-08-02.md)
+- [Issue #9 product experience audit — 2026-08-04](audits/issue-9-product-experience-audit.md)
 - [Repository asset provenance](release/asset-provenance.md)
 - [Issue #1 beginner packaging tutorial](issue-1-python-packaging-tutorial.md)
+- [Issue #8 implementation and independent verification](agent/issue-8-implementation-report.md)
+- [ChatGPT Pro vs Codex A/B evaluation](experiments/agent-ab-evaluation/stage-2-scorecard.md)
 
 ## Historical records retained in place
 

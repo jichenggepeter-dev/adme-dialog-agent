@@ -253,6 +253,18 @@ make dev
 Ctrl+C shuts down both services. Run `make backend` or `make frontend` when only
 one service is needed.
 
+## Review proposed changes without an API key
+
+The repository includes a temporary PR Review App configuration for
+human-visible product review. It uses the real frontend, API, streaming
+contract, confirmations, and evidence cards with five deterministic Mock Agent
+scenarios. It never needs an LLM provider credential and it remains visibly
+labeled as a non-production preview.
+
+See [PR Review App](docs/review-app.md) for the reviewer workflow, cost boundary,
+and Render setup. Creating or publishing a preview still requires an authorized
+repository administrator and a Render Pro workspace.
+
 The default ports are 8000 for FastAPI and 3000 for Next.js. To avoid a local
 port conflict without stopping another project, choose both ports together:
 
@@ -407,6 +419,7 @@ have reviewed that provider's privacy and retention terms. See
 - [Project positioning](docs/project-positioning.md)
 - [Testing guide](docs/testing-guide.md)
 - [Agent documentation](docs/agent/00_README_AGENT_DOCS.md)
+- [ADME evidence RAG](docs/evidence-rag.md)
 - [Roadmap](ROADMAP.md)
 
 ## Contributing

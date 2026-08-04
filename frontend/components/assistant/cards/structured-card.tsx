@@ -1,13 +1,34 @@
 "use client";
 import { CheckCircle, Flask, Info, WarningCircle } from "@phosphor-icons/react";
 import { useState } from "react";
-import type { Confirmation, PendingAction, StructuredPayload } from "@/lib/agent-types";
+import type { Confirmation, EvidenceAnswerData, PendingAction, StructuredPayload } from "@/lib/agent-types";
 
-const label: Record<string, string> = { prediction: "Prediction summary", endpoint_explanation: "Endpoint details", batch_summary: "Batch summary", batch_errors: "Batch issues", comparison: "Compound comparison", model_information: "Model information", resource: "Scientific resource", error: "Assistant notice", out_of_scope: "Scope boundary" };
+const label: Record<string, string> = { prediction: "Prediction summary", endpoint_explanation: "Endpoint details", evidence_answer: "ADME evidence", batch_summary: "Batch summary", batch_errors: "Batch issues", comparison: "Compound comparison", model_information: "Model information", resource: "Scientific resource", error: "Assistant notice", out_of_scope: "Scope boundary" };
 const primitive = (value: unknown) => typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? String(value) : null;
+
+const evidenceStatusLabel: Record<EvidenceAnswerData["status"], string> = {
+  supported: "Supported",
+  partial: "Partial",
+  conflicting: "Conflicting",
+  no_evidence: "No evidence",
+  prohibited: "Prohibited",
+  stale_only: "Stale only",
+};
+
+function EvidenceCard({ data }: { data: EvidenceAnswerData }) {
+  return <section className={`assistant-card evidence-card evidence-${data.status}`} aria-label="ADME evidence answer">
+    <header><Flask size={18} /><strong>ADME evidence</strong><span className="evidence-status">{evidenceStatusLabel[data.status]}</span></header>
+    <div className="evidence-layer"><b>Assistant summary</b><p>{data.assistant_summary}</p></div>
+    {data.claims.length ? <div className="evidence-claims"><b>Literature evidence</b>{data.claims.map((claim, index) => <article key={`${claim.text}-${index}`}><p>{claim.text}</p>{claim.evidence.map((citation) => <div className="evidence-source" key={citation.chunk_id}><a href={citation.url} target="_blank" rel="noreferrer">{citation.title}</a><span>{citation.organization} · {citation.status} · {citation.page ? `page ${citation.page}` : citation.section}</span><code>{citation.chunk_id}</code><blockquote>{citation.excerpt}</blockquote><small>Version: {citation.version} · captured {citation.captured_at}</small></div>)}</article>)}</div> : null}
+    {!data.claims.length && data.evidence.length ? <div className="evidence-claims"><b>Source record only</b>{data.evidence.map((citation) => <div className="evidence-source" key={citation.chunk_id}><a href={citation.url} target="_blank" rel="noreferrer">{citation.title}</a><span>{citation.status} · {citation.section}</span><code>{citation.chunk_id}</code></div>)}</div> : null}
+    <small className="evidence-boundary"><Info size={13} /> Prediction output, Registry metadata, retrieved evidence, and Assistant summary are separate layers. This card is not clinical advice.</small>
+  </section>;
+}
+
 export function StructuredCard({ payload }: { payload: StructuredPayload }) {
   const [expanded, setExpanded] = useState(false);
   if (payload.type === "compound_confirmation" || payload.type === "none") return null;
+  if (payload.type === "evidence_answer") return <EvidenceCard data={payload.data} />;
   if (payload.type === "batch_errors" && Array.isArray(payload.data.errors)) {
     const errors = payload.data.errors as Record<string, unknown>[];
     const visible = expanded ? errors : errors.slice(0, 10);

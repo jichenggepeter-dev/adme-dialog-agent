@@ -10,6 +10,7 @@ Only the following strict function tools are registered:
 | `predict_single_compound` | Neutral prediction service | Confirmed compound and exact canonical match required |
 | `get_prediction_results` | Session prediction resource | Filtered enriched metadata; no automatic probability interpretation |
 | `explain_endpoint` | Endpoint Registry | Unknown/unverified metadata remains neutral |
+| `search_adme_evidence` | Approved local FDA evidence index | Claim-linked citations; explicit partial, conflict, stale, missing, and prohibited states |
 | `get_model_information` | Predictor status + Registry | Provenance and limitations retained |
 | `get_batch_job_status` | Existing batch repository | Read-only compact status |
 | `get_batch_errors` | Existing batch rows + resource store | Read-only bounded subset and resource ID |

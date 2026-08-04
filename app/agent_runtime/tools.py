@@ -57,6 +57,14 @@ def explain_endpoint(
 
 
 @function_tool(strict_mode=True)
+def search_adme_evidence(
+    ctx: RunContextWrapper[ToolExecutionContext], query: str, top_k: int = 3
+) -> dict:
+    """Retrieve claim-linked passages from the approved local FDA evidence corpus."""
+    return AgentToolService(ctx.context).search_adme_evidence(query, top_k)
+
+
+@function_tool(strict_mode=True)
 def get_model_information(ctx: RunContextWrapper[ToolExecutionContext]) -> dict:
     """Return deterministic predictor and Endpoint Registry status."""
     return AgentToolService(ctx.context).get_model_information()
@@ -142,6 +150,7 @@ ALLOWED_AGENT_TOOLS = [
     predict_single_compound,
     get_prediction_results,
     explain_endpoint,
+    search_adme_evidence,
     get_model_information,
     get_batch_job_status,
     get_batch_errors,

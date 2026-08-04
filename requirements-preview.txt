@@ -1,0 +1,13 @@
+# Pinned runtime for the no-key PR Review App. ADMET-AI is installed so the
+# endpoint catalog matches local development, but model execution remains off:
+# every preview prediction is forced through deterministic Mock mode.
+admet-ai==2.0.1
+fastapi==0.139.0
+httpx==0.28.1
+openai==2.45.0
+openai-agents==0.18.2
+pydantic==2.13.4
+python-dotenv==1.2.2
+python-multipart==0.0.32
+rdkit==2026.3.3
+uvicorn==0.51.0

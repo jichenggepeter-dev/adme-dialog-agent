@@ -94,3 +94,20 @@ during the 2026-08-02 review.
 Do not add model weights, datasets, papers, screenshots, icons, or user files
 without recording source, license, attribution requirements, and redistribution
 permission. An accessible web page is not automatically reusable content.
+
+## FDA evidence excerpts
+
+The local evidence index contains short excerpts from seven FDA-authored web
+pages captured on 2026-08-03. FDA states that, unless otherwise noted, FDA
+website content is public domain. The excerpts retain canonical links, capture
+dates, versions, lifecycle status, and stable source identifiers. One withdrawn
+2020 guidance record is included only to test stale-source handling and is never
+presented as current evidence.
+
+- Corpus and exact source list: `resources/evidence/corpus.json`
+- Workflow and update policy: `docs/evidence-rag.md`
+- FDA website policy: <https://www.fda.gov/about-fda/about-website/website-policies>
+- FDA withdrawn guidance list: <https://www.fda.gov/drugs/guidances-drugs/withdrawn-and-expired-guidances-drugs>
+
+These excerpts do not relicense FDA-linked third-party content. Maintainers must
+repeat the rights and lifecycle review before adding or replacing a source.

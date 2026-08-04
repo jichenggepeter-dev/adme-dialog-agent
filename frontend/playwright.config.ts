@@ -17,12 +17,12 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "cd .. && AGENT_ENABLED=true ADME_MOCK_MODE=true AGENT_DB_PATH=/tmp/adme-agent-e2e.sqlite3 ADME_DATA_DIR=/tmp/adme-e2e .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+      command: "cd .. && AGENT_ENABLED=true AGENT_PROVIDER_MODE=mock ADME_MOCK_MODE=true AGENT_DB_PATH=/tmp/adme-agent-e2e.sqlite3 ADME_DATA_DIR=/tmp/adme-e2e .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
       url: "http://127.0.0.1:8000/health",
       reuseExistingServer: true,
     },
     {
-      command: "npm run dev -- --webpack --hostname 127.0.0.1 --port 3000",
+      command: "NEXT_PUBLIC_REVIEW_MODE=true NEXT_PUBLIC_AGENT_PROVIDER_MODE=mock NEXT_PUBLIC_REVIEW_REVISION=local-e2e npm run dev -- --webpack --hostname 127.0.0.1 --port 3000",
       url: "http://127.0.0.1:3000",
       reuseExistingServer: true,
     },

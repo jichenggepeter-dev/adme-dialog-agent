@@ -30,3 +30,5 @@ def test_caco2_value_is_not_described_as_probability():
     summary = generate_summary(grouped)
     assert "predicted numerical value" in summary
     assert "high predicted probability" not in summary
+    assert "require domain-specific interpretation and experimental validation" in summary
+    assert "priorit" not in summary.lower()

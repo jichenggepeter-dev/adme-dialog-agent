@@ -54,8 +54,8 @@ def get_model():
     return _MODEL
 
 
-def predict_one(smiles: str) -> dict:
-    if is_mock_mode():
+def predict_one(smiles: str, *, force_mock: bool = False) -> dict:
+    if force_mock or is_mock_mode():
         return _mock_prediction(smiles)
 
     model = get_model()
@@ -168,8 +168,8 @@ def _mock_prediction(smiles: str) -> dict:
     }
 
 
-def predictor_status() -> dict[str, bool | str]:
-    mock_mode = is_mock_mode()
+def predictor_status(*, force_mock: bool = False) -> dict[str, bool | str]:
+    mock_mode = force_mock or is_mock_mode()
     if mock_mode:
         available = True
     else:

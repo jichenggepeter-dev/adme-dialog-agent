@@ -9,12 +9,13 @@ from uuid import uuid4
 from pydantic import ValidationError
 
 from app.agent_runtime.confirmations import ConfirmationEngine
-from app.agent_runtime.contracts import ToolResultEnvelope
+from app.agent_runtime.contracts import EvidenceAnswerData, ToolResultEnvelope
 from app.agent_runtime.errors import AgentCoreError
 from app.agent_runtime.repositories import AgentRepository
 from app.services.comparison import ComparisonError, compare_prediction_payloads
 from app.services.input_quality import InputQualityError, assess_input_quality
 from app.services.prediction import PredictionServiceError, predict_single_smiles
+from app.services.evidence import search_evidence
 from app.tools.batch import BatchError, get_job
 from app.tools.compound import CompoundResolutionError, resolve_compound
 from app.tools.endpoints import (
@@ -35,6 +36,7 @@ class ToolExecutionContext:
     session_id: str
     repository: AgentRepository
     state_version: int
+    mock_agent_catalog_version: int | None = None
     tool_activity: list[dict[str, Any]] = field(default_factory=list)
     structured_payloads: list[dict[str, Any]] = field(default_factory=list)
     pending_confirmation: dict[str, Any] | None = None
@@ -58,6 +60,13 @@ class AgentToolService:
         quality = assess_input_quality(compound["canonical_smiles"])
         compound_id = f"compound_{uuid4().hex}"
         compound_payload = {**compound, "compound_id": compound_id, "input_quality": quality}
+        if self.context.mock_agent_catalog_version is not None:
+            compound_payload.update(
+                {
+                    "agent_provider_mode": "mock",
+                    "mock_catalog_version": self.context.mock_agent_catalog_version,
+                }
+            )
         resource = self.repository.put_resource(
             self.context.session_id, "compound", compound_payload
         )
@@ -152,7 +161,11 @@ class AgentToolService:
             raise AgentCoreError(
                 "TOOL_RESULT_INVALID", "Confirmed SMILES does not match compound state.", 409
             )
-        result = predict_single_smiles(compound["canonical_smiles"])
+        result = (
+            predict_single_smiles(compound["canonical_smiles"], force_mock=True)
+            if self.context.mock_agent_catalog_version is not None
+            else predict_single_smiles(compound["canonical_smiles"])
+        )
         prediction_id = f"prediction_{uuid4().hex}"
         raw = self.repository.put_resource(
             self.context.session_id,
@@ -265,12 +278,41 @@ class AgentToolService:
             provenance={"source": "Endpoint Registry"},
         )
 
+    def search_adme_evidence(self, query: str, top_k: int = 3) -> dict:
+        return self._execute(
+            "search_adme_evidence",
+            lambda: self._search_adme_evidence(query, top_k),
+            {"query": query, "top_k": top_k},
+        )
+
+    def _search_adme_evidence(self, query: str, top_k: int) -> dict:
+        data = EvidenceAnswerData.model_validate(
+            search_evidence(query, top_k)
+        ).model_dump(mode="json")
+        self.context.structured_payloads.append(
+            {"type": "evidence_answer", "data": data}
+        )
+        self.context.warnings.extend(data["warnings"])
+        return self._envelope(
+            "search_adme_evidence",
+            "ok",
+            data=data,
+            provenance={
+                "source": "Approved local FDA evidence corpus",
+                "retrieval": "deterministic lexical BM25",
+            },
+        )
+
     def get_model_information(self) -> dict:
         return self._execute("get_model_information", self._get_model_information, {})
 
     def _get_model_information(self) -> dict:
         registry = registry_document()
-        status = predictor_status()
+        status = (
+            predictor_status(force_mock=True)
+            if self.context.mock_agent_catalog_version is not None
+            else predictor_status()
+        )
         data = {
                 **status,
                 "registry_schema_version": registry["registry_schema_version"],

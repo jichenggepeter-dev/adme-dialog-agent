@@ -1,0 +1,58 @@
+previews:
+  generation: manual
+  expireAfterDays: 3
+
+services:
+  - type: pserv
+    name: adme-dialog-agent-api
+    runtime: python
+    plan: starter
+    previews:
+      plan: starter
+      numInstances: 1
+    buildCommand: pip install -r requirements-preview.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.13
+      - key: AGENT_ENABLED
+        value: "true"
+      - key: AGENT_PROVIDER_MODE
+        value: mock
+      - key: ADME_MOCK_MODE
+        value: "true"
+      - key: OPENAI_AGENTS_DISABLE_TRACING
+        value: "1"
+      - key: AGENT_DB_PATH
+        value: /tmp/adme-dialog-agent/review.sqlite3
+      - key: ADME_DATA_DIR
+        value: /tmp/adme-dialog-agent/data
+
+  - type: web
+    name: adme-dialog-agent-web
+    runtime: node
+    rootDir: frontend
+    plan: starter
+    previews:
+      plan: starter
+      numInstances: 1
+    buildCommand: NEXT_PUBLIC_REVIEW_REVISION=$RENDER_GIT_COMMIT npm ci && NEXT_PUBLIC_REVIEW_REVISION=$RENDER_GIT_COMMIT npm run build
+    startCommand: npm start
+    healthCheckPath: /single
+    envVars:
+      - key: NODE_VERSION
+        value: 22.17.0
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: /api
+      - key: NEXT_PUBLIC_REVIEW_MODE
+        value: "true"
+      - key: NEXT_PUBLIC_AGENT_PROVIDER_MODE
+        value: mock
+      - key: BACKEND_HOSTPORT
+        fromService:
+          type: pserv
+          name: adme-dialog-agent-api
+          property: hostport

@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-08-03",
+  "rights_basis": {
+    "summary": "FDA-authored website text is public domain unless otherwise noted. These short excerpts retain their capture date and canonical FDA link.",
+    "policy_url": "https://www.fda.gov/about-fda/about-website/website-policies"
+  },
+  "sources": [
+    {
+      "source_id": "fda-m12-2024",
+      "title": "M12 Drug Interaction Studies",
+      "organization": "U.S. Food and Drug Administration",
+      "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/m12-drug-interaction-studies",
+      "document_date": "2024-08",
+      "version": "Final Level 1 Guidance",
+      "status": "current",
+      "topics": ["drug interaction", "enzyme", "transporter", "pharmacokinetics"],
+      "passages": [
+        {
+          "section": "Guidance summary (FDA web page, line 81)",
+          "page": null,
+          "claim": "The guidance provides general recommendations on evaluating the enzyme and transporter-mediated pharmacokinetic drug-drug interaction potential for investigational drugs.",
+          "excerpt": "The guidance provides general recommendations on evaluating the enzyme and transporter-mediated pharmacokinetic drug-drug interaction potential for investigational drugs."
+        },
+        {
+          "section": "Guidance summary (FDA web page, line 82)",
+          "page": null,
+          "claim": "The guidance is intended to harmonize regional recommendations for designing, conducting, and interpreting in vitro and clinical evaluations of drug-drug interactions while developing investigational drugs.",
+          "excerpt": "The guidance is intended to harmonize the regional recommendations for designing, conducting, and interpreting in vitro and clinical evaluations of drug-drug interactions while developing investigational drugs."
+        }
+      ]
+    },
+    {
+      "source_id": "fda-mass-balance-2024",
+      "title": "Clinical Pharmacology Considerations for Human Radiolabeled Mass Balance Studies",
+      "organization": "U.S. Food and Drug Administration",
+      "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-pharmacology-considerations-human-radiolabeled-mass-balance-studies",
+      "document_date": "2024-09",
+      "version": "Final Guidance",
+      "status": "current",
+      "topics": ["mass balance", "radiolabeled", "clinical pharmacology", "study design"],
+      "passages": [
+        {
+          "section": "Guidance summary (FDA web page, line 78)",
+          "page": null,
+          "claim": "The guidance covers deciding whether and when to conduct a human radiolabeled mass balance study, designing the study, and reporting results.",
+          "excerpt": "This guidance describes the FDA’s recommendations regarding clinical pharmacology considerations for conducting human radiolabeled mass balance studies of investigational drugs, including: (1) deciding whether and when to conduct the study, (2) designing the study, and (3) reporting results."
+        }
+      ]
+    },
+    {
+      "source_id": "fda-metabolites-2016",
+      "title": "Safety Testing of Drug Metabolites",
+      "organization": "U.S. Food and Drug Administration",
+      "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/safety-testing-drug-metabolites",
+      "document_date": "2016-11",
+      "version": "Final Level 2 Revised Guidance; page updated 2020-03-05",
+      "status": "current",
+      "topics": ["drug metabolites", "nonclinical toxicity", "disproportionate metabolites"],
+      "passages": [
+        {
+          "section": "Guidance summary (FDA web page, line 80)",
+          "page": null,
+          "claim": "The guidance addresses when and how to identify and characterize drug metabolites whose nonclinical toxicity needs to be evaluated.",
+          "excerpt": "This guidance provides recommendations to industry on when and how to identify and characterize drug metabolites whose nonclinical toxicity needs to be evaluated."
+        }
+      ]
+    },
+    {
+      "source_id": "fda-food-effect-2026",
+      "title": "Assessing the Effects of Food on Drugs in INDs and NDAs – Clinical Pharmacology Considerations",
+      "organization": "U.S. Food and Drug Administration",
+      "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/assessing-effects-food-drugs-inds-and-ndas-clinical-pharmacology-considerations",
+      "document_date": "2026-05",
+      "version": "Final Level 2 Guidance",
+      "status": "current",
+      "topics": ["food effect", "oral drug", "IND", "NDA", "bioavailability"],
+      "passages": [
+        {
+          "section": "Guidance summary (FDA web page, line 78)",
+          "page": null,
+          "claim": "The guidance gives recommendations for food-effect studies of orally administered drug products under INDs supporting NDAs and supplements.",
+          "excerpt": "This guidance provides recommendations to sponsors planning to conduct food-effect (FE) studies for orally administered drug products under investigational new drug applications (INDs) to support new drug applications (NDAs) and supplements to these applications for drugs being developed under section 505 of the Federal Food, Drug, and Cosmetic Act (21 U.S.C. 355)."
+        },
+        {
+          "section": "Guidance summary (FDA web page, line 79)",
+          "page": null,
+          "claim": "The 2026 guidance revises and replaces part of the 2002 FDA food-effect bioavailability and fed bioequivalence guidance.",
+          "excerpt": "This guidance revises and replaces part of the 2002 FDA guidance entitled Food-Effect Bioavailability and Fed Bioequivalence Studies (December 2002)."
+        }
+      ]
+    },
+    {
+      "source_id": "fda-renal-pk-2024",
+      "title": "Pharmacokinetics in Patients with Impaired Renal Function — Study Design, Data Analysis, and Impact on Dosing",
+      "organization": "U.S. Food and Drug Administration",
+      "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/pharmacokinetics-patients-impaired-renal-function-study-design-data-analysis-and-impact-dosing",
+      "document_date": "2024-03",
+      "version": "Final Level 1 Guidance",
+      "status": "current",
+      "topics": ["renal impairment", "pharmacokinetics", "study design"],
+      "passages": [
+        {
+          "section": "Guidance summary (FDA web page, line 78)",
+          "page": null,
+          "claim": "The guidance addresses studies assessing how renal impairment influences the pharmacokinetics of an investigational drug.",
+          "excerpt": "This guidance is intended to assist sponsors planning to conduct studies to assess the influence of renal impairment on the pharmacokinetics of an investigational drug."
+        }
+      ]
+    },
+    {
+      "source_id": "fda-dili-2009",
+      "title": "Drug-Induced Liver Injury: Premarketing Clinical Evaluation",
+      "organization": "U.S. Food and Drug Administration",
+      "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/drug-induced-liver-injury-premarketing-clinical-evaluation",
+      "document_date": "2009-07",
+      "version": "Final Guidance",
+      "status": "current",
+      "topics": ["drug-induced liver injury", "DILI", "premarketing", "laboratory measurements"],
+      "passages": [
+        {
+          "section": "Guidance summary (FDA web page, line 80)",
+          "page": null,
+          "claim": "The guidance addresses how laboratory measurements signaling potential drug-induced liver injury can be obtained and evaluated during drug development.",
+          "excerpt": "In particular, the guidance addresses how laboratory measurements that signal the potential for such druginduced liver injury (DILI) can be obtained and evaluated during drug development."
+        }
+      ]
+    },
+    {
+      "source_id": "fda-in-vitro-ddi-2020-withdrawn",
+      "title": "In Vitro Drug Interaction Studies — Cytochrome P450 Enzyme- and Transporter-Mediated Drug Interactions Guidance for Industry",
+      "organization": "U.S. Food and Drug Administration",
+      "url": "https://www.fda.gov/drugs/guidances-drugs/withdrawn-and-expired-guidances-drugs",
+      "document_date": "2020-01-23",
+      "version": "Withdrawn 2024-11-05",
+      "status": "superseded",
+      "topics": ["withdrawn guidance", "in vitro drug interaction", "cytochrome P450"],
+      "passages": [
+        {
+          "section": "Withdrawn and Expired Guidances table (FDA web page, line 77)",
+          "page": null,
+          "claim": "FDA lists the 2020 In Vitro Drug Interaction Studies guidance as withdrawn on 11/05/2024.",
+          "excerpt": "In Vitro Drug Interaction Studies — Cytochrome P450 Enzyme- and Transporter-Mediated Drug Interactions Guidance for Industry | 01/23/2020 | 11/05/2024"
+        }
+      ]
+    }
+  ]
+}

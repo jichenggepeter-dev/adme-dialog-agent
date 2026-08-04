@@ -84,6 +84,28 @@ def validate_scientific_output(
         return base
     normalized = " ".join(text.lower().split())
     facts = list(_scientific_facts(structured_payloads))
+    evidence_payloads = [
+        payload.get("data")
+        for payload in structured_payloads
+        if isinstance(payload, dict)
+        and payload.get("type") == "evidence_answer"
+        and isinstance(payload.get("data"), dict)
+    ]
+    if evidence_payloads:
+        prose_numbers = set(re.findall(r"\d+(?:\.\d+)?%?", text))
+        evidence_numbers = set(
+            re.findall(
+                r"\d+(?:\.\d+)?%?",
+                " ".join(
+                    str(citation.get("excerpt", ""))
+                    for data in evidence_payloads
+                    for citation in data.get("evidence", [])
+                    if isinstance(citation, dict)
+                ),
+            )
+        )
+        if not prose_numbers <= evidence_numbers:
+            return _scientific_block()
     modes = {str(item.get("prediction_mode", "")).lower() for item in facts}
     if "mock" in modes and re.search(r"\b(?:real admet-ai|real model|admet-ai output)\b", normalized):
         return _scientific_block()
