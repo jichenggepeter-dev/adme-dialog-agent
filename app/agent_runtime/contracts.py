@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class StrictModel(BaseModel):
@@ -352,6 +352,81 @@ class AgentChatResponse(StrictModel):
     ui_action_proposals: list[UIActionProposal] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     state_version: int
+
+
+class AgentStreamEnvelope(StrictModel):
+    version: Literal[1] = 1
+    session_id: str = Field(min_length=1, max_length=128)
+    message_id: str = Field(min_length=1, max_length=128)
+    correlation_id: str = Field(min_length=1, max_length=128)
+    sequence: int = Field(ge=0)
+
+
+class AgentStreamHeartbeat(AgentStreamEnvelope):
+    type: Literal["heartbeat"] = "heartbeat"
+
+
+class AgentStreamMessageDelta(AgentStreamEnvelope):
+    type: Literal["message_delta"] = "message_delta"
+    delta: str = Field(min_length=1, max_length=256)
+
+
+class AgentStreamToolStarted(AgentStreamEnvelope):
+    type: Literal["tool_started"] = "tool_started"
+    tool_name: str = Field(
+        min_length=1,
+        max_length=120,
+        pattern=r"^[A-Za-z0-9_.-]+$",
+    )
+
+
+class AgentStreamToolCompleted(AgentStreamEnvelope):
+    type: Literal["tool_completed"] = "tool_completed"
+    tool_activity: ToolActivity
+
+
+class AgentStreamConfirmationRequired(AgentStreamEnvelope):
+    type: Literal["confirmation_required"] = "confirmation_required"
+    pending_confirmation: CompoundConfirmation | None
+    pending_action: PendingAction | None
+
+    @model_validator(mode="after")
+    def require_exactly_one_pending_record(self) -> AgentStreamConfirmationRequired:
+        if (self.pending_confirmation is None) == (self.pending_action is None):
+            raise ValueError(
+                "Exactly one pending confirmation or pending action is required."
+            )
+        return self
+
+
+class AgentStreamResponseCompleted(AgentStreamEnvelope):
+    type: Literal["response_completed"] = "response_completed"
+    structured_payloads: list[StructuredPayload]
+    pending_confirmation: CompoundConfirmation | None
+    pending_action: PendingAction | None
+    tool_activity: list[ToolActivity]
+    ui_action_proposals: list[UIActionProposal]
+    warnings: list[str]
+    state_version: int = Field(ge=0)
+
+
+class AgentStreamError(AgentStreamEnvelope):
+    type: Literal["error"] = "error"
+    code: str = Field(min_length=1, max_length=80, pattern=r"^[A-Z0-9_]+$")
+    message: str = Field(min_length=1, max_length=500)
+    retryable: bool = False
+
+
+AgentStreamEvent = Annotated[
+    AgentStreamHeartbeat
+    | AgentStreamMessageDelta
+    | AgentStreamToolStarted
+    | AgentStreamToolCompleted
+    | AgentStreamConfirmationRequired
+    | AgentStreamResponseCompleted
+    | AgentStreamError,
+    Field(discriminator="type"),
+]
 
 
 class ResourceMetadata(StrictModel):

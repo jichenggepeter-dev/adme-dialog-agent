@@ -5,7 +5,7 @@ const compound = {
   pubchem_cid: 3672, molecular_formula: "C13H18O2", molecular_weight: 206.28,
   canonical_smiles: "CC(C)CC1=CC=C(C=C1)C(C)C(=O)O", isomeric_smiles: null,
   data_source: "PubChem", depiction_svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 160'><path d='M25 90 L70 60 L115 90 L160 60 L210 90' fill='none' stroke='black' stroke-width='4'/></svg>",
-  warnings: [], input_quality: { warnings: [] },
+  warnings: [], input_quality: { parse_status: "valid", fragment_count: 1, heavy_atom_count: 15, molecular_weight: 206.28, total_formal_charge: 0, metal_presence: false, metal_elements: [], unusual_elements: [], mixture_warning: false, size_warning: false, warnings: [], is_applicability_domain_score: false },
 };
 const predictions = {
   absorption: { Caco2_Wang: 0.71, HIA_Hou: 0.89, Bioavailability_Ma: 0.56 },
@@ -16,14 +16,24 @@ const predictions = {
 
 test("assistant-guided compound confirmation docks left and renders results right", async ({ page }) => {
   let chatCount = 0;
-  await page.route("http://127.0.0.1:8000/agent/chat", async (route) => {
+  await page.route("http://127.0.0.1:8000/agent/chat/stream", async (route) => {
     chatCount += 1;
     const body = route.request().postDataJSON();
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ message_id: `msg_${chatCount}`, text: "请确认 Ibuprofen 的结构，确认后我会运行计算预测。", structured_payloads: [{ type: "compound_confirmation", data: compound }], pending_confirmation: { confirmation_id: "confirm_guided", session_id: body.session_id, type: "compound_structure", status: "awaiting_confirmation", payload: compound, payload_hash: "hash", canonical_smiles: compound.canonical_smiles, expected_state_version: body.expected_state_version, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 60_000).toISOString(), version: 0, result_resource_id: null, error_code: null }, tool_activity: [{ tool_name: "resolve_compound", status: "completed", error_code: null, resource_id: "resource_compound" }], ui_action_proposals: [], warnings: [], state_version: body.expected_state_version }) });
+    const correlationId = route.request().headers()["x-correlation-id"];
+    const messageId = `msg_${chatCount}`;
+    const confirmation = { confirmation_id: "confirm_guided", session_id: body.session_id, type: "compound_structure", status: "awaiting_confirmation", payload: compound, payload_hash: "hash", canonical_smiles: compound.canonical_smiles, expected_state_version: body.expected_state_version, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 60_000).toISOString(), version: 0, result_resource_id: null, error_code: null };
+    const common = { version: 1, session_id: body.session_id, message_id: messageId, correlation_id: correlationId };
+    const events = [
+      { ...common, type: "heartbeat", sequence: 0 },
+      { ...common, type: "message_delta", sequence: 1, delta: "请确认 Ibuprofen 的结构，确认后我会运行计算预测。" },
+      { ...common, type: "confirmation_required", sequence: 2, pending_confirmation: confirmation, pending_action: null },
+      { ...common, type: "response_completed", sequence: 3, structured_payloads: [{ type: "compound_confirmation", data: compound }], pending_confirmation: confirmation, pending_action: null, tool_activity: [{ tool_name: "resolve_compound", status: "completed", error_code: null, resource_id: "resource_compound" }], ui_action_proposals: [], warnings: [], state_version: body.expected_state_version },
+    ];
+    await route.fulfill({ status: 200, contentType: "application/x-ndjson", body: events.map((event) => JSON.stringify(event)).join("\n") + "\n" });
   });
   await page.route("http://127.0.0.1:8000/agent/confirm", async (route) => {
     const body = route.request().postDataJSON();
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ message_id: "msg_prediction", text: "Ibuprofen 的计算预测已经完成。", structured_payloads: [{ type: "prediction", data: { prediction_resource_id: "resource_prediction", prediction_mode: "mock" } }], pending_confirmation: null, tool_activity: [{ tool_name: "predict_single_compound", status: "completed", error_code: null, resource_id: "resource_prediction" }], ui_action_proposals: [], warnings: [], state_version: body.expected_state_version + 2 }) });
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ message_id: "msg_prediction", text: "Ibuprofen 的计算预测已经完成。", structured_payloads: [{ type: "prediction", data: { prediction_resource_id: "resource_prediction", prediction_mode: "mock" } }], pending_confirmation: null, pending_action: null, tool_activity: [{ tool_name: "predict_single_compound", status: "completed", error_code: null, resource_id: "resource_prediction" }], ui_action_proposals: [], warnings: [], state_version: body.expected_state_version + 2 }) });
   });
   await page.route(/http:\/\/127\.0\.0\.1:8000\/agent\/resources\/resource_prediction.*/, async (route) => {
     const sessionId = new URL(route.request().url()).searchParams.get("session_id");

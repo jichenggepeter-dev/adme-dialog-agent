@@ -9,9 +9,10 @@ import { AssistantMarkdown } from "./assistant-markdown";
 import { downloadPrediction } from "@/components/export-actions";
 
 const TOOL_LABELS: Record<string, string> = { resolve_compound: "Resolved compound", get_compound_context: "Checked structure", predict_single_compound: "Ran ADME prediction", explain_endpoint: "Loaded endpoint metadata", get_model_information: "Read model information", get_batch_job_status: "Read batch status", get_batch_errors: "Checked batch issues", summarize_batch_results: "Summarized batch results", get_batch_rows: "Read batch rows", compare_batch_rows: "Compared batch rows", prepare_batch_action: "Prepared batch action", compare_compounds: "Compared selected compounds" };
+const STREAM_LABELS = { idle: "", connecting: "Connecting…", generating: "Generating response…", tool: "Using an approved scientific tool…", waiting_confirmation: "Waiting for your confirmation", completed: "Response complete", failed: "Response stopped" } as const;
 
 export function AssistantPanel() {
-  const { open, closing, setOpen, ready, loading, messages, pending, pendingAction, error, actionPhase, actionResult, guidedPrediction, send, decide, decideAction, clearError } = useAssistant();
+  const { open, closing, setOpen, ready, loading, messages, pending, pendingAction, error, streamStatus, actionPhase, actionResult, guidedPrediction, send, cancelStream, decide, decideAction, clearError } = useAssistant();
   const [draft, setDraft] = useState(""); const end = useRef<HTMLDivElement>(null); const pathname = usePathname();
   const batch = pathname.startsWith("/batch");
   useEffect(() => { if (open) end.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, open, pending, pendingAction]);
@@ -24,7 +25,7 @@ export function AssistantPanel() {
       {messages.map((message) => <article className={`assistant-message ${message.role}`} key={message.message_id}><div className="message-role">{message.role === "user" ? "You" : "ADME Assistant"}</div><AssistantMarkdown>{message.content}</AssistantMarkdown>{message.tools?.length ? <div className="tool-activity">{message.tools.map((tool, index) => <span key={`${tool.tool_name}-${index}`}><CheckCircle size={14} />{TOOL_LABELS[tool.tool_name] ?? "Scientific tool completed"}</span>)}</div> : null}{message.payloads?.map((payload, index) => <StructuredCard key={`${payload.type}-${index}`} payload={payload} />)}</article>)}
       {pending ? <ConfirmationCard confirmation={pending} loading={loading} onDecision={(value) => void decide(value)} /> : null}
       {pendingAction ? <PendingActionCard action={pendingAction} loading={loading} onDecision={(value) => void decideAction(value)} /> : null}
-      {loading ? <div className="assistant-thinking" role="status"><i /><i /><i /><span>Working with approved scientific tools</span></div> : null}
+      {streamStatus !== "idle" ? <div className="assistant-thinking" role="status" aria-live="polite">{loading ? <><i /><i /><i /></> : null}<span>{STREAM_LABELS[streamStatus]}</span>{loading ? <button type="button" onClick={cancelStream}>Stop waiting</button> : null}</div> : null}
       {actionResult && !actionResult.ok ? <div className="assistant-error" role="alert"><strong>Could not apply this action</strong><p>{actionResult.message}</p><small>{actionResult.code}</small></div> : null}
       {error ? <div className="assistant-error" role="alert"><strong>{error.code === "AGENT_DISABLED" ? "Assistant is disabled" : "Assistant unavailable"}</strong><p>{error.message}</p>{error.correlationId ? <small>Correlation: {error.correlationId}</small> : null}<button onClick={clearError}><ArrowClockwise size={14} />Dismiss</button></div> : null}<div ref={end} />
     </div>

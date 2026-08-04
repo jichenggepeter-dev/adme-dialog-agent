@@ -39,8 +39,14 @@ class AgentRuntime:
     def create_session(self) -> dict:
         return self.repository.create_session()
 
-    async def chat(self, request: AgentChatRequest) -> dict:
-        correlation_id = uuid4().hex
+    async def chat(
+        self,
+        request: AgentChatRequest,
+        *,
+        assistant_message_id: str | None = None,
+        correlation_id: str | None = None,
+    ) -> dict:
+        correlation_id = correlation_id or uuid4().hex
         started = time.monotonic()
         current = self.repository.get_business_state(request.session_id)
         if current["version"] != request.expected_state_version:
@@ -56,6 +62,7 @@ class AgentRuntime:
                 current["version"],
                 correlation_id,
                 started,
+                assistant_message_id,
             )
 
         state_version = current["version"]
@@ -85,7 +92,13 @@ class AgentRuntime:
             result = AgentToolService(context).prepare_batch_action(batch_job_id, batch_action)
             if result["status"] != "confirmation_required":
                 text = result.get("message") or "The batch action could not be prepared."
-                assistant_message = self.repository.add_message(request.session_id, "assistant", text, metadata={"pending_action_error": result.get("error_code")})
+                assistant_message = self.repository.add_message(
+                    request.session_id,
+                    "assistant",
+                    text,
+                    metadata={"pending_action_error": result.get("error_code")},
+                    message_id=assistant_message_id,
+                )
                 return {
                     "message_id": assistant_message["message_id"], "text": text,
                     "structured_payloads": [{"type": "error", "data": {"error_code": result.get("error_code")}}],
@@ -94,7 +107,13 @@ class AgentRuntime:
                     "warnings": [], "state_version": context.state_version,
                 }
             text = "Please review and confirm the exact batch action below."
-            assistant_message = self.repository.add_message(request.session_id, "assistant", text, metadata={"pending_action": batch_action})
+            assistant_message = self.repository.add_message(
+                request.session_id,
+                "assistant",
+                text,
+                metadata={"pending_action": batch_action},
+                message_id=assistant_message_id,
+            )
             return {
                 "message_id": assistant_message["message_id"], "text": text,
                 "structured_payloads": [], "pending_confirmation": None,
@@ -106,7 +125,11 @@ class AgentRuntime:
         if ui_intent is not None:
             text, actions = ui_intent
             assistant_message = self.repository.add_message(
-                request.session_id, "assistant", text, metadata={"ui_action_count": len(actions)}
+                request.session_id,
+                "assistant",
+                text,
+                metadata={"ui_action_count": len(actions)},
+                message_id=assistant_message_id,
             )
             return {
                 "message_id": assistant_message["message_id"],
@@ -195,6 +218,7 @@ class AgentRuntime:
             "assistant",
             text,
             metadata={"tool_count": len(context.tool_activity)},
+            message_id=assistant_message_id,
         )
         record_local_audit(
             self.repository,
@@ -316,9 +340,14 @@ class AgentRuntime:
         state_version: int,
         correlation_id: str,
         started: float,
+        assistant_message_id: str | None = None,
     ) -> dict:
         message = self.repository.add_message(
-            session_id, "assistant", text, {"policy_code": code}
+            session_id,
+            "assistant",
+            text,
+            {"policy_code": code},
+            message_id=assistant_message_id,
         )
         record_local_audit(
             self.repository,
