@@ -26,8 +26,8 @@ test("runs the keyless Mock Agent review flow against the real local API", async
   await page.getByLabel("Message ADME Assistant").fill("Exercise the confirmation state.");
   await page.getByRole("button", { name: "Send message" }).click();
   await expect(page.getByRole("region", { name: "Assistant guided analysis" })).toBeVisible();
-  await expect(page.getByText("Resolved SMILES compound")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Resolved SMILES compound" })).toBeVisible();
   await page.getByRole("button", { name: "Confirm & Run Prediction" }).click();
   await expect(page.getByRole("heading", { name: "Computational Summary" })).toBeVisible();
-  await expect(page.getByText("Mock Predictions")).toBeVisible();
+  await expect(page.getByText("Mock Predictions", { exact: true })).toBeVisible();
 });
