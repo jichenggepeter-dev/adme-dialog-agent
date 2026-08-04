@@ -13,8 +13,12 @@ test("runs the keyless Mock Agent review flow against the real local API", async
 
   await page.getByLabel("Message ADME Assistant").fill("Show the selected review behavior.");
   await page.getByRole("button", { name: "Send message" }).click();
-  await expect(page.getByText(/Mock Agent v1: The deterministic model-information tool completed/)).toBeVisible();
-  await expect(page.getByText("Read model information")).toBeVisible();
+  await expect(page.getByText(/Mock Agent v1: The approved local FDA evidence corpus returned a supported, cited answer/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "ADME evidence answer" })).toBeVisible();
+  await expect(page.getByText("Supported", { exact: true })).toBeVisible();
+  const evidenceLinks = page.getByRole("link", { name: "M12 Drug Interaction Studies" });
+  await expect(evidenceLinks).toHaveCount(2);
+  await expect(evidenceLinks.first()).toHaveAttribute("href", /fda\.gov/);
 
   await page.getByLabel("Test scenario").selectOption("timeout");
   await page.getByLabel("Message ADME Assistant").fill("Exercise the timeout state.");
@@ -23,6 +27,7 @@ test("runs the keyless Mock Agent review flow against the real local API", async
   await page.getByRole("button", { name: "Dismiss" }).click();
 
   await page.getByLabel("Test scenario").selectOption("confirmation");
+  await expect(page.getByText(/Resolves ethanol \(CCO\)/)).toBeVisible();
   await page.getByLabel("Message ADME Assistant").fill("Exercise the confirmation state.");
   await page.getByRole("button", { name: "Send message" }).click();
   await expect(page.getByRole("region", { name: "Assistant guided analysis" })).toBeVisible();

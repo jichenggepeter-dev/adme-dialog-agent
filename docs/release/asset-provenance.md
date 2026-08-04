@@ -28,6 +28,24 @@ The screenshots show application UI, icons supplied through declared frontend
 dependencies, and synthetic/reference molecular input. They are documentation,
 not scientific evidence or proof of a real-model result.
 
+## Issue #11 course demonstration captures
+
+These JPEG files were captured on 2026-08-04 from this repository's local
+no-key Review App by the repository maintainer using Codex browser automation.
+They show only project UI, deterministic test content, and public FDA citation
+metadata. No private compound, credential, user data, or third-party website
+image is embedded. They are project documentation that may be redistributed and
+modified under the repository license.
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/images/course-demo/supported-evidence.jpg` | `2cbad8dc672a896a3cc2aa3e5d244405f3cfc5517fbc7827b80f04e27d61f8cc` |
+| `docs/images/course-demo/no-evidence.jpg` | `41b40c2d6d432d328f7e94369ed707648210176707a482ec86b2b76df5018ddc` |
+
+The captures demonstrate Review App behavior only. They are not scientific
+evidence and must be recaptured with the final published revision visible before
+the course presentation.
+
 ## Removed asset
 
 `docs/agent/reference/assist.jpeg` was unused and had no embedded or adjacent

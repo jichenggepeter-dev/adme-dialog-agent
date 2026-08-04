@@ -15,6 +15,7 @@ MOCK_SCENARIO_IDS = (
     "insufficient_evidence",
 )
 MISSING_PREDICTION_ID = "prediction_mock_v1_missing_fixture"
+SUPPORTED_EVIDENCE_QUERY = "What does M12 say about drug interactions?"
 ABSENT_EVIDENCE_QUERY = (
     "What does the corpus say about quantum entanglement in tablet coatings?"
 )
@@ -53,14 +54,24 @@ def validate_mock_scenario(
 def run_mock_scenario(scenario_id: str, tools: AgentToolService) -> str:
     """Run one fixed scenario through named public tool-service methods."""
     if scenario_id == "success":
-        _require_result(tools.get_model_information(), status="ok")
+        result = _require_result(
+            tools.search_adme_evidence(SUPPORTED_EVIDENCE_QUERY),
+            status="ok",
+        )
+        data = result.get("data") or {}
+        if (
+            data.get("status") != "supported"
+            or not data.get("claims")
+            or not data.get("evidence")
+        ):
+            raise _scenario_failed()
         return mock_response_text(
-            "The deterministic model-information tool completed"
+            "The approved local FDA evidence corpus returned a supported, cited answer"
         )
     if scenario_id == "confirmation":
         _require_result(tools.resolve_compound("CCO"), status="confirmation_required")
         return mock_response_text(
-            "Review and confirm the resolved CCO structure; no prediction has run"
+            "Review and confirm the resolved ethanol (CCO) structure; no prediction has run"
         )
     if scenario_id == "timeout":
         raise AgentCoreError(

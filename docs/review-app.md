@@ -48,8 +48,8 @@ The five versioned scenarios are:
 
 | Scenario | What the reviewer sees |
 | --- | --- |
-| Successful tool run | Model information returned through the normal tool contract |
-| Structure confirmation | A fixed `CCO` structure that must be approved before Mock prediction |
+| Successful tool run | A supported answer and FDA citation returned through the normal evidence-tool contract |
+| Structure confirmation | A fixed ethanol (`CCO`) structure that must be approved before Mock prediction |
 | Provider timeout | A stable retryable timeout state |
 | Tool failure | A stable missing-resource tool error |
 | Insufficient evidence | A source card with no evidence and no unsupported claims |
