@@ -10,6 +10,13 @@ The preview is designed for local, single-user use. It does not include
 authentication, tenant isolation, or the operational controls required for an
 internet-facing multi-user deployment.
 
+The optional PR Review App is a narrowly scoped exception for temporary product
+review. It runs only deterministic Mock Agent and Mock prediction paths, keeps
+temporary state on one disposable instance, and places the API behind the
+frontend service. It must not receive private structures, real user data,
+provider credentials, or production secrets. Passing Review App checks does not
+make the project suitable for production use.
+
 ## Report privately
 
 Do not open a public issue for a vulnerability. After the GitHub repository is

@@ -89,11 +89,17 @@ class MessagePage(StrictModel):
     total: int
 
 
+class MockScenarioSelection(StrictModel):
+    catalog_version: int
+    id: str = Field(min_length=1, max_length=80)
+
+
 class AgentChatRequest(StrictModel):
     session_id: str
     message: str = Field(min_length=1, max_length=8_000)
     expected_state_version: int = Field(ge=0)
     page_context: PageContext | None = None
+    mock_scenario: MockScenarioSelection | None = None
 
 
 class ToolActivity(StrictModel):
@@ -325,12 +331,51 @@ class ToolResultEnvelope(StrictModel):
     provenance: dict[str, Any] = Field(default_factory=dict)
 
 
+class EvidenceCitation(StrictModel):
+    source_id: str
+    title: str
+    organization: str
+    url: str
+    document_date: str
+    version: str
+    status: Literal["current", "superseded", "draft"]
+    captured_at: str
+    section: str
+    page: int | str | None = None
+    chunk_id: str
+    excerpt: str
+
+
+class EvidenceClaim(StrictModel):
+    text: str
+    evidence: list[EvidenceCitation] = Field(min_length=1, max_length=5)
+
+
+class EvidenceAnswerData(StrictModel):
+    query: str
+    status: Literal[
+        "supported",
+        "partial",
+        "conflicting",
+        "no_evidence",
+        "prohibited",
+        "stale_only",
+    ]
+    availability: Literal["available", "unavailable"]
+    assistant_summary: str
+    claims: list[EvidenceClaim] = Field(max_length=5)
+    evidence: list[EvidenceCitation] = Field(max_length=5)
+    source_count: int = Field(ge=0, le=5)
+    warnings: list[str] = Field(default_factory=list, max_length=5)
+
+
 class StructuredPayload(StrictModel):
     type: Literal[
         "none",
         "compound_confirmation",
         "prediction",
         "endpoint_explanation",
+        "evidence_answer",
         "batch_summary",
         "comparison",
         "batch_errors",

@@ -15,6 +15,13 @@ from app.agent_runtime.contracts import AgentChatRequest, ConfirmationRequest, P
 from app.agent_runtime.errors import AgentCoreError
 from app.agent_runtime.guardrails import evaluate_input, validate_scientific_output
 from app.agent_runtime.instructions import BASE_INSTRUCTIONS
+from app.agent_runtime.mock_provider import (
+    MOCK_AGENT_LABEL,
+    MOCK_CATALOG_VERSION,
+    mock_response_text,
+    run_mock_scenario,
+    validate_mock_scenario,
+)
 from app.agent_runtime.provider import (
     AgentProviderError,
     create_agent_provider,
@@ -25,7 +32,11 @@ from app.agent_runtime.resources import ResourceStore
 from app.agent_runtime.tool_service import AgentToolService, ToolExecutionContext
 from app.agent_runtime.ui_actions import resolve_ui_action
 from app.agent_runtime.tools import ALLOWED_AGENT_TOOLS
-from app.settings import AgentSettingsError, get_agent_settings
+from app.settings import (
+    AgentSettingsError,
+    get_agent_provider_mode,
+    get_agent_settings,
+)
 from app.tools.batch import BatchError, cancel_job, get_job, run_job_thread
 
 
@@ -52,12 +63,21 @@ class AgentRuntime:
         if current["version"] != request.expected_state_version:
             raise AgentCoreError("ACTION_STALE", "Agent state version is stale.", 409)
 
+        try:
+            provider_mode = get_agent_provider_mode()
+        except AgentSettingsError as exc:
+            raise AgentCoreError("AGENT_NOT_CONFIGURED", str(exc), 503) from None
+        scenario_id = validate_mock_scenario(provider_mode, request.mock_scenario)
+
         self.repository.add_message(request.session_id, "user", request.message)
         policy = evaluate_input(request.message)
         if not policy.allowed:
+            policy_text = policy.response or "Request blocked."
+            if provider_mode == "mock":
+                policy_text = mock_response_text(policy_text)
             return self._policy_response(
                 request.session_id,
-                policy.response or "Request blocked.",
+                policy_text,
                 policy.code or "ACTION_NOT_ALLOWED",
                 current["version"],
                 correlation_id,
@@ -84,7 +104,39 @@ class AgentRuntime:
             session_id=request.session_id,
             repository=self.repository,
             state_version=state_version,
+            mock_agent_catalog_version=(
+                MOCK_CATALOG_VERSION if provider_mode == "mock" else None
+            ),
         )
+        if provider_mode == "mock":
+            try:
+                text = run_mock_scenario(
+                    scenario_id or "",
+                    AgentToolService(context),
+                )
+            except AgentCoreError as exc:
+                record_local_audit(
+                    self.repository,
+                    session_id=request.session_id,
+                    correlation_id=correlation_id,
+                    event_type="agent_run",
+                    status="error",
+                    model=MOCK_AGENT_LABEL,
+                    duration_ms=int((time.monotonic() - started) * 1000),
+                    error_code=exc.code,
+                    summary={"mock_scenario": scenario_id},
+                )
+                raise
+            return self._finalize_tool_response(
+                request=request,
+                text=text,
+                context=context,
+                model=MOCK_AGENT_LABEL,
+                correlation_id=correlation_id,
+                started=started,
+                assistant_message_id=assistant_message_id,
+            )
+
         page = request.page_context.page if request.page_context is not None else business_page(current["state"])
         batch_job_id = request.page_context.batch_job_id if request.page_context is not None and request.page_context.page == "batch" else None
         batch_action = _batch_action_intent(request.message, batch_job_id)
@@ -204,9 +256,39 @@ class AgentRuntime:
             await provider.client.close()
 
         text = str(result.final_output).strip()
-        output_policy = validate_scientific_output(text, context.structured_payloads)
+        return self._finalize_tool_response(
+            request=request,
+            text=text,
+            context=context,
+            model=settings.model,
+            correlation_id=correlation_id,
+            started=started,
+            assistant_message_id=assistant_message_id,
+        )
+
+    def _finalize_tool_response(
+        self,
+        *,
+        request: AgentChatRequest,
+        text: str,
+        context: ToolExecutionContext,
+        model: str | None,
+        correlation_id: str,
+        started: float,
+        assistant_message_id: str | None,
+    ) -> dict:
+        text_for_policy = (
+            text.replace(MOCK_AGENT_LABEL, "", 1)
+            if model == MOCK_AGENT_LABEL
+            else text
+        )
+        output_policy = validate_scientific_output(
+            text_for_policy, context.structured_payloads
+        )
         if not output_policy.allowed:
             text = output_policy.response or "Response blocked by scientific policy."
+            if model == MOCK_AGENT_LABEL:
+                text = mock_response_text(text)
             context.structured_payloads = [
                 {
                     "type": "error",
@@ -226,7 +308,7 @@ class AgentRuntime:
             correlation_id=correlation_id,
             event_type="agent_run",
             status="ok" if output_policy.allowed else "blocked",
-            model=settings.model,
+            model=model,
             duration_ms=int((time.monotonic() - started) * 1000),
             error_code=None if output_policy.allowed else output_policy.code,
             summary={
@@ -257,6 +339,8 @@ class AgentRuntime:
                 request.expected_state_version,
             )
             text = "Structure confirmation was rejected. No prediction was run."
+            if _mock_catalog_version(confirmation) is not None:
+                text = mock_response_text(text)
             message = self.repository.add_message(
                 request.session_id, "assistant", text, {"confirmation": "rejected"}
             )
@@ -278,10 +362,12 @@ class AgentRuntime:
             request.expected_state_version,
         )
         compound_id = confirmation["payload"]["compound_id"]
+        mock_catalog_version = _mock_catalog_version(confirmation)
         context = ToolExecutionContext(
             session_id=request.session_id,
             repository=self.repository,
             state_version=updated["version"],
+            mock_agent_catalog_version=mock_catalog_version,
         )
         result = AgentToolService(context).predict_single_compound(compound_id)
         succeeded = result["status"] == "ok"
@@ -295,12 +381,20 @@ class AgentRuntime:
             data = result["data"]
             text = data["summary"]
             if data["prediction_mode"] == "mock":
-                text = (
-                    "Mock mode: these are deterministic test values, not ADMET-AI output. "
-                    + text
-                )
+                if mock_catalog_version is not None:
+                    text = mock_response_text(
+                        "The confirmed structure was predicted once with deterministic "
+                        f"test values. {text}"
+                    )
+                else:
+                    text = (
+                        "Mock mode: these are deterministic test values, not ADMET-AI output. "
+                        + text
+                    )
         else:
             text = "The confirmed structure could not be predicted."
+            if mock_catalog_version is not None:
+                text = mock_response_text(text)
             context.structured_payloads.append(
                 {"type": "error", "data": {"error_code": result["error_code"]}}
             )
@@ -508,6 +602,16 @@ def _confirmation_contract(value: dict | None) -> dict | None:
             "error_code",
         )
     }
+
+
+def _mock_catalog_version(confirmation: dict) -> int | None:
+    payload = confirmation.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    version = payload.get("mock_catalog_version")
+    if payload.get("agent_provider_mode") != "mock" or version != MOCK_CATALOG_VERSION:
+        return None
+    return version
 
 
 def _pending_action_contract(value: dict | None) -> dict | None:

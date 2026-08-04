@@ -47,7 +47,10 @@ def generate_summary(grouped_predictions: dict[str, Any]) -> str:
     observations = [observation for observation in observations if observation][:4]
     if observations:
         sentences.append("Selected outputs: " + "; ".join(observations) + ".")
-    sentences.append("These computational results may support prioritization, but they require experimental validation.")
+    sentences.append(
+        "These computational outputs require domain-specific interpretation "
+        "and experimental validation."
+    )
     return " ".join(sentences)
 
 

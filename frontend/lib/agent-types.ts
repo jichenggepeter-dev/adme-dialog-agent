@@ -62,8 +62,36 @@ export type ToolActivity = {
   resource_id: string | null;
 };
 
-export type StructuredPayload = {
-  type:
+export type EvidenceCitation = {
+  source_id: string;
+  title: string;
+  organization: string;
+  url: string;
+  document_date: string;
+  version: string;
+  status: "current" | "superseded" | "draft";
+  captured_at: string;
+  section: string;
+  page: number | string | null;
+  chunk_id: string;
+  excerpt: string;
+};
+
+export type EvidenceAnswerData = Record<string, unknown> & {
+  query: string;
+  status: "supported" | "partial" | "conflicting" | "no_evidence" | "prohibited" | "stale_only";
+  availability: "available" | "unavailable";
+  assistant_summary: string;
+  claims: { text: string; evidence: EvidenceCitation[] }[];
+  evidence: EvidenceCitation[];
+  source_count: number;
+  warnings: string[];
+};
+
+export type StructuredPayload =
+  | { type: "evidence_answer"; data: EvidenceAnswerData }
+  | {
+      type:
     | "none"
     | "compound_confirmation"
     | "prediction"
@@ -75,8 +103,8 @@ export type StructuredPayload = {
     | "resource"
     | "out_of_scope"
     | "error";
-  data: Record<string, unknown>;
-};
+      data: Record<string, unknown>;
+    };
 
 export type Confirmation = {
   confirmation_id: string;

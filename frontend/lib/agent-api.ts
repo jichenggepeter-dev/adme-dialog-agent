@@ -19,6 +19,7 @@ import type {
 } from "./agent-types";
 import type { z } from "zod";
 import type { PredictionResponse } from "./types";
+import type { MockScenarioSelection } from "./review-mode";
 
 export class AgentApiError extends Error {
   constructor(
@@ -104,6 +105,7 @@ export type AgentStreamOptions = {
   signal?: AbortSignal;
   timeoutMs?: number;
   onEvent?: (event: AgentStreamEvent) => void;
+  mockScenario?: MockScenarioSelection;
 };
 
 type StreamIdentity = {
@@ -294,6 +296,9 @@ export async function streamAgentMessage(
         message,
         expected_state_version: stateVersion,
         page_context: pageContext,
+        ...(options.mockScenario
+          ? { mock_scenario: options.mockScenario }
+          : {}),
       }),
     });
 

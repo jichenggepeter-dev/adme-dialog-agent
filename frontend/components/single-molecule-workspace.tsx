@@ -1,7 +1,7 @@
 "use client";
 
 import { Flask, WarningCircle } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiClientError, fetchEndpoints, fetchStatus, predictSmiles, resolveCompound } from "@/lib/api";
 import { messageForError } from "@/lib/formatters";
 import type { CompoundResponse, EndpointMetadata, PredictionResponse, StatusResponse } from "@/lib/types";
@@ -47,6 +47,11 @@ export function SingleMoleculeWorkspace() {
   }, []);
 
   const currentResult = guidedPrediction ?? result;
+  const guidedPredictionTime = useMemo(
+    () => guidedPrediction ? new Date() : null,
+    [guidedPrediction],
+  );
+
   useEffect(() => publishAssistantPageContext({
     page: "single",
     compound_id: typeof pending?.payload.compound_id === "string" ? pending.payload.compound_id : null,
@@ -125,7 +130,7 @@ export function SingleMoleculeWorkspace() {
         {compound ? <CompoundConfirmationCard compound={compound} predicting={predicting} onPredict={() => void runPrediction()} onChangeCompound={changeCompound} /> : null}</>}
       </aside>
       <section className="prediction-column" aria-label="Prediction workspace">
-        <PredictionStatusBar status={status} lastPrediction={lastPrediction} />
+        <PredictionStatusBar status={status} lastPrediction={guidedPredictionTime ?? lastPrediction} />
         {predictionError ? <div className="prediction-error" role="alert"><WarningCircle size={20} aria-hidden="true" /><div><strong>Prediction did not complete</strong><p>{predictionError}</p></div></div> : null}
         {predicting || (guidedMode && loading && !guidedPrediction) ? <div className="prediction-loading" role="status"><Flask size={34} weight="duotone" aria-hidden="true" /><div><h2>Running ADME/ADMET prediction</h2><p>The first real-model prediction may take longer while the model initializes.</p></div></div> : guidedPrediction || result ? <PredictionResults result={guidedPrediction ?? result!} endpointRegistry={registry} highlightedCategory={highlightedTarget} onCategoryElement={(category, element) => { categoryRefs.current[category] = element; }} /> : <div className="prediction-empty"><Flask size={42} weight="duotone" aria-hidden="true" /><h2>{guidedMode ? "Waiting for structure confirmation" : "Ready for a confirmed compound"}</h2><p>{guidedMode ? "Confirm the resolved structure in the guided workflow to run the computational prediction." : "Resolve and confirm a compound on the left, then run ADME/ADMET prediction."}</p></div>}
       </section>

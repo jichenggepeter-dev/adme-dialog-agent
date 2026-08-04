@@ -17,6 +17,7 @@ from app.settings import AgentSettings, AgentSettingsError, get_agent_settings
 
 ENV = {
     "AGENT_ENABLED": "false",
+    "AGENT_PROVIDER_MODE": "live",
     "AGENT_LLM_BASE_URL": "http://127.0.0.1:18080/v1",
     "AGENT_LLM_API_KEY": "unit-test-secret",
     "AGENT_LLM_MODEL": "unit-test-model",
@@ -47,6 +48,47 @@ def test_settings_are_explicit_and_agent_defaults_off(monkeypatch: pytest.Monkey
     assert settings.model == "unit-test-model"
     assert settings.base_url == "http://127.0.0.1:18080/v1"
     assert settings.hosted_tracing_disabled is True
+
+
+def test_live_provider_mode_is_the_default_and_keeps_required_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    apply_env(monkeypatch)
+    monkeypatch.delenv("AGENT_PROVIDER_MODE")
+    monkeypatch.delenv("AGENT_LLM_API_KEY")
+    get_agent_settings.cache_clear()
+
+    with pytest.raises(AgentSettingsError, match="AGENT_LLM_API_KEY"):
+        get_agent_settings()
+
+
+def test_mock_provider_mode_loads_without_any_llm_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    apply_env(monkeypatch)
+    monkeypatch.setenv("AGENT_PROVIDER_MODE", "mock")
+    for name in tuple(ENV):
+        if name.startswith("AGENT_LLM_"):
+            monkeypatch.delenv(name)
+    get_agent_settings.cache_clear()
+
+    settings = get_agent_settings()
+
+    assert settings.provider_mode == "mock"
+    assert settings.base_url is None
+    assert settings.api_key is None
+    assert settings.model is None
+
+
+def test_provider_mode_rejects_values_other_than_live_or_mock(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    apply_env(monkeypatch)
+    monkeypatch.setenv("AGENT_PROVIDER_MODE", "automatic")
+    get_agent_settings.cache_clear()
+
+    with pytest.raises(AgentSettingsError, match="AGENT_PROVIDER_MODE"):
+        get_agent_settings()
 
 
 def test_provider_builds_responses_model_without_logging_key(

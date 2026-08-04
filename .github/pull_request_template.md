@@ -37,6 +37,14 @@ List the exact commands and manual workflows you ran.
 Include screenshots for visible UI changes. Use synthetic or public example data
 and remove local paths, identifiers, and credentials.
 
+## Review App
+
+- [ ] I added `[render preview]` to the PR title when a shareable review link is useful.
+- [ ] The preview shows `PR Preview · Mock Agent v1` and the expected source revision.
+- [ ] I exercised the relevant fixed Mock scenario without adding provider credentials.
+- [ ] I did not enter private molecules, production data, or real user information.
+- [ ] I recorded the preview link or explained why no preview was created.
+
 ## Documentation and migration
 
 Describe documentation, API, storage, or migration impact. Write `None` when

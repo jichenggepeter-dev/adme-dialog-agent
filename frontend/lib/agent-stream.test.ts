@@ -58,4 +58,39 @@ describe("Agent NDJSON stream", () => {
     controller.abort();
     await expect(request).rejects.toMatchObject({ code: "AGENT_STREAM_ABORTED" });
   });
+
+  it("sends the selected deterministic Mock Agent scenario", async () => {
+    let capturedInit: RequestInit | undefined;
+    const fetchMock = vi.fn(async (url: string, init: RequestInit) => {
+      void url;
+      capturedInit = init;
+      return new Response(JSON.stringify({
+        error: {
+          code: "TEST_STOP",
+          message: "Request captured.",
+          details: null,
+          retryable: false,
+          correlation_id: "corr_test",
+        },
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(streamAgentMessage(
+      "session_1",
+      "run the selected scenario",
+      0,
+      { page: "single" },
+      { mockScenario: { catalog_version: 1, id: "tool_failure" } },
+    )).rejects.toMatchObject({ code: "TEST_STOP" });
+
+    const body = JSON.parse(String(capturedInit?.body));
+    expect(body.mock_scenario).toEqual({
+      catalog_version: 1,
+      id: "tool_failure",
+    });
+  });
 });

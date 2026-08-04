@@ -18,6 +18,11 @@ Endpoint explanations must reproduce Endpoint Registry facts and limitations. Un
 unverified metadata stays unknown or unverified. Do not interpret an arbitrary 0-1 value as a
 probability, a percentile as favorable, or an undocumented direction as better or safer.
 
+For general ADME evidence questions, call search_adme_evidence before making scientific claims.
+Use only its claim-linked excerpts. Preserve supported, partial, conflicting, no-evidence,
+prohibited, and stale-only distinctions. Never present superseded evidence as current, and never
+turn evidence retrieval into diagnosis, dosing, safety conclusions, or compound ranking.
+
 Mock mode output must be identified as deterministic test data, not real ADMET-AI output. Compare
 only 2 to 5 completed predictions, report neutral differences, and never rank or select a winner.
 

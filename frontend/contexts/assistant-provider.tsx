@@ -2,16 +2,22 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { createAgentSession, decideConfirmation, decidePendingAction, getPredictionResource, streamAgentMessage, AgentApiError } from "@/lib/agent-api";
+import { createAgentSession, decideConfirmation, decidePendingAction, getAgentSession, getPredictionResource, streamAgentMessage, AgentApiError } from "@/lib/agent-api";
 import type { AgentMessage, AgentResponse, AgentStreamEvent, AssistantStreamStatus, Confirmation, PageContext, PendingAction, StructuredPayload, ToolActivity } from "@/lib/agent-types";
 import { applyStreamEvent, finalizeStreamedMessage } from "@/lib/assistant-stream-state";
 import { getAssistantPageContext } from "@/lib/assistant-page-state";
 import { executeUIAction, shouldCollapseForAction, type UIActionExecutionResult } from "@/lib/ui-action-dispatcher";
 import { transitionDelay, type ActionPhase } from "@/components/assistant/assistant-action-transition";
 import type { PredictionResponse } from "@/lib/types";
+import {
+  DEFAULT_MOCK_SCENARIO,
+  MOCK_AGENT_MODE,
+  mockScenarioSelection,
+  type MockScenarioId,
+} from "@/lib/review-mode";
 
 export type ViewMessage = AgentMessage & { payloads?: StructuredPayload[]; tools?: ToolActivity[] };
-type AssistantState = { open: boolean; closing: boolean; ready: boolean; loading: boolean; messages: ViewMessage[]; pending: Confirmation | null; pendingAction: PendingAction | null; error: AgentApiError | null; stateVersion: number; streamStatus: AssistantStreamStatus; actionPhase: ActionPhase; actionResult: UIActionExecutionResult | null; guidedMode: boolean; guidedPrediction: PredictionResponse | null; send: (text: string) => Promise<void>; cancelStream: () => void; decide: (decision: "approve" | "reject") => Promise<void>; decideAction: (decision: "approve" | "reject") => Promise<void>; setOpen: (value: boolean) => void; exitGuidedMode: () => void; clearError: () => void };
+type AssistantState = { open: boolean; closing: boolean; ready: boolean; loading: boolean; messages: ViewMessage[]; pending: Confirmation | null; pendingAction: PendingAction | null; error: AgentApiError | null; stateVersion: number; streamStatus: AssistantStreamStatus; actionPhase: ActionPhase; actionResult: UIActionExecutionResult | null; guidedMode: boolean; guidedPrediction: PredictionResponse | null; mockScenario: MockScenarioId; setMockScenario: (scenario: MockScenarioId) => void; send: (text: string) => Promise<void>; cancelStream: () => void; decide: (decision: "approve" | "reject") => Promise<void>; decideAction: (decision: "approve" | "reject") => Promise<void>; setOpen: (value: boolean) => void; exitGuidedMode: () => void; clearError: () => void };
 const Context = createContext<AssistantState | null>(null);
 
 function routeContext(pathname: string): PageContext {
@@ -31,6 +37,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const streamAbortRef = useRef<AbortController | null>(null);
   const [actionPhase, setActionPhase] = useState<ActionPhase>("idle"); const [actionResult, setActionResult] = useState<UIActionExecutionResult | null>(null);
   const [guidedMode, setGuidedMode] = useState(false); const [guidedPrediction, setGuidedPrediction] = useState<PredictionResponse | null>(null);
+  const [mockScenario, setMockScenario] = useState<MockScenarioId>(DEFAULT_MOCK_SCENARIO);
 
   const setOpen = useCallback((value: boolean) => {
     if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
@@ -111,11 +118,24 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
         else if (event.type === "response_completed") setStreamStatus("completed");
         else setStreamStatus("generating");
       };
-      const response = await streamAgentMessage(sessionId, text.trim(), stateVersion, pageContext, { signal: controller.signal, onEvent });
+      const response = await streamAgentMessage(sessionId, text.trim(), stateVersion, pageContext, {
+        signal: controller.signal,
+        onEvent,
+        mockScenario: MOCK_AGENT_MODE ? mockScenarioSelection(mockScenario) : undefined,
+      });
       await ingest(response, true);
       setStreamStatus(response.pending_confirmation || response.pending_action ? "waiting_confirmation" : "completed");
-    } catch (caught) { setStreamStatus("failed"); setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "The Assistant request failed.")); } finally { streamAbortRef.current = null; setLoading(false); }
-  }, [ingest, loading, sessionId, stateVersion]);
+    } catch (caught) {
+      setStreamStatus("failed");
+      setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "The Assistant request failed."));
+      try {
+        const session = await getAgentSession(sessionId);
+        setStateVersion(session.state_version);
+      } catch {
+        // Preserve the original stream error when the recovery read is unavailable.
+      }
+    } finally { streamAbortRef.current = null; setLoading(false); }
+  }, [ingest, loading, mockScenario, sessionId, stateVersion]);
 
   const cancelStream = useCallback(() => { streamAbortRef.current?.abort(); }, []);
 
@@ -135,7 +155,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     } catch (caught) { setStreamStatus("failed"); setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "Batch action confirmation failed.")); } finally { setLoading(false); }
   }, [ingest, loading, pendingAction, router, sessionId, stateVersion]);
 
-  const value = useMemo(() => ({ open, closing, ready, loading, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, send, cancelStream, decide, decideAction, setOpen, exitGuidedMode: () => setGuidedMode(false), clearError: () => setError(null) }), [open, closing, ready, loading, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, send, cancelStream, decide, decideAction, setOpen]);
+  const value = useMemo(() => ({ open, closing, ready, loading, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, mockScenario, setMockScenario, send, cancelStream, decide, decideAction, setOpen, exitGuidedMode: () => setGuidedMode(false), clearError: () => setError(null) }), [open, closing, ready, loading, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, mockScenario, send, cancelStream, decide, decideAction, setOpen]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useAssistant() { const value = useContext(Context); if (!value) throw new Error("useAssistant must be inside AssistantProvider"); return value; }
