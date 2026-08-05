@@ -265,6 +265,10 @@ See [PR Review App](docs/review-app.md) for the reviewer workflow, cost boundary
 and Render setup. Creating or publishing a preview still requires an authorized
 repository administrator and a Render Pro workspace.
 
+For the professor-facing five-minute flow, plain-language terminology, failure
+fallbacks, and FOSS evidence, see the
+[course demonstration guide](docs/course-demonstration-guide.md).
+
 The default ports are 8000 for FastAPI and 3000 for Next.js. To avoid a local
 port conflict without stopping another project, choose both ports together:
 

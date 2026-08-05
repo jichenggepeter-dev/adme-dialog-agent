@@ -19,6 +19,7 @@ from app.agent_runtime.mock_provider import (
     ABSENT_EVIDENCE_QUERY,
     MISSING_PREDICTION_ID,
     MOCK_SCENARIO_IDS,
+    SUPPORTED_EVIDENCE_QUERY,
 )
 from app.agent_runtime.routes import get_agent_runtime
 from app.main import app
@@ -92,9 +93,22 @@ def test_catalog_has_exactly_the_five_version_one_scenarios() -> None:
     )
 
 
-def test_success_uses_model_information_and_does_not_infer_from_keywords(
+def test_success_uses_supported_evidence_and_does_not_infer_from_keywords(
     mock_client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    calls: list[tuple[str, int]] = []
+    search_adme_evidence = tool_service_module.AgentToolService.search_adme_evidence
+
+    def capture_search(service, query: str, top_k: int = 3) -> dict:
+        calls.append((query, top_k))
+        return search_adme_evidence(service, query, top_k)
+
+    monkeypatch.setattr(
+        tool_service_module.AgentToolService,
+        "search_adme_evidence",
+        capture_search,
+    )
     _, response = _chat(
         mock_client,
         "success",
@@ -105,16 +119,17 @@ def test_success_uses_model_information_and_does_not_infer_from_keywords(
     body = response.json()
     _assert_mock_boundary(body["text"])
     assert [item["tool_name"] for item in body["tool_activity"]] == [
-        "get_model_information"
+        "search_adme_evidence"
     ]
     assert body["tool_activity"][0]["status"] == "completed"
     assert [item["type"] for item in body["structured_payloads"]] == [
-        "model_information"
+        "evidence_answer"
     ]
-    model_information = body["structured_payloads"][0]["data"]
-    assert model_information["prediction_mode"] == "mock"
-    assert model_information["model_loaded"] is False
-    assert model_information["model_name"] == "Deterministic development fixture"
+    evidence = body["structured_payloads"][0]["data"]
+    assert evidence["status"] == "supported"
+    assert evidence["claims"]
+    assert evidence["evidence"]
+    assert calls == [(SUPPORTED_EVIDENCE_QUERY, 3)]
 
 
 def test_confirmation_stops_then_approval_predicts_mock_output_once(
@@ -324,8 +339,11 @@ def test_unexpected_tool_envelope_fails_the_scenario_stably(
 ) -> None:
     monkeypatch.setattr(
         tool_service_module.AgentToolService,
-        "get_model_information",
-        lambda _service: {"status": "error", "error_code": "FIXTURE_BROKEN"},
+        "search_adme_evidence",
+        lambda _service, _query, _top_k=3: {
+            "status": "error",
+            "error_code": "FIXTURE_BROKEN",
+        },
     )
 
     _, response = _chat(mock_client, "success")

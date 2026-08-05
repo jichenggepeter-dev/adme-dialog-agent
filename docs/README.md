@@ -28,6 +28,7 @@ remain the executable source of truth when a document is accidentally stale.
 - [Computational summary rules](computational-summary-rules.md)
 - [ADME evidence RAG](evidence-rag.md)
 - [Keyless PR Review App](review-app.md)
+- [Course demonstration guide](course-demonstration-guide.md)
 
 ## Current Agent contracts
 
@@ -45,6 +46,8 @@ remain the executable source of truth when a document is accidentally stale.
 - [Clean-clone verification — 2026-08-02](release/clean-clone-verification-2026-08-02.md)
 - [Pre-release security and rights review — 2026-08-02](release/pre-release-review-2026-08-02.md)
 - [Issue #9 product experience audit — 2026-08-04](audits/issue-9-product-experience-audit.md)
+- [Course progress and verification report — 2026-08-04](release/course-progress-report-2026-08-04.md)
+- [Issue #11 independent documentation review — 2026-08-04](release/issue-11-independent-review-2026-08-04.md)
 - [Repository asset provenance](release/asset-provenance.md)
 - [Issue #1 beginner packaging tutorial](issue-1-python-packaging-tutorial.md)
 - [Issue #8 implementation and independent verification](agent/issue-8-implementation-report.md)

@@ -22,12 +22,12 @@ export const MOCK_SCENARIOS: ReadonlyArray<{
   {
     id: "success",
     label: "Successful tool run",
-    description: "Shows deterministic model information.",
+    description: "Shows a supported answer from the local FDA evidence corpus.",
   },
   {
     id: "confirmation",
     label: "Structure confirmation",
-    description: "Resolves CCO and waits for approval before Mock prediction.",
+    description: "Resolves ethanol (CCO) and waits for approval before Mock prediction.",
   },
   {
     id: "timeout",
