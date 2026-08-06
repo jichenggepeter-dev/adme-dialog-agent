@@ -24,6 +24,48 @@ export const sessionSchema = z
   })
   .strict();
 
+const sessionDeletionCountsSchema = z
+  .object({
+    sessions: z.number().int().nonnegative(),
+    messages: z.number().int().nonnegative(),
+    business_state: z.number().int().nonnegative(),
+    confirmations: z.number().int().nonnegative(),
+    pending_actions: z.number().int().nonnegative(),
+    resources: z.number().int().nonnegative(),
+    audit_events: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export const sessionDeletionProposalSchema = z
+  .object({
+    action: z
+      .object({
+        action_id: z.string().min(1),
+        session_id: z.string().min(1),
+        action_type: z.literal("delete_session_v1"),
+        status: z.literal("awaiting_confirmation"),
+        payload: z.object({}).strict(),
+        expected_state_version: z.number().int().nonnegative(),
+        created_at: z.string(),
+        expires_at: z.string(),
+        consumed_at: z.string().nullable(),
+      })
+      .strict(),
+    counts: sessionDeletionCountsSchema,
+    deleted: z.array(z.string()),
+    retained: z.array(z.string()),
+  })
+  .strict();
+
+export const sessionDeletionResultSchema = z
+  .object({
+    status: z.enum(["deleted", "rejected"]),
+    deleted_at: z.string().nullable(),
+    counts: sessionDeletionCountsSchema.nullable(),
+    retained: z.array(z.string()),
+  })
+  .strict();
+
 export const messagePageSchema = z
   .object({
     messages: z.array(

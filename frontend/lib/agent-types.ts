@@ -182,6 +182,40 @@ export type AgentSession = {
   state_version: number;
 };
 
+export type SessionDeletionCounts = {
+  sessions: number;
+  messages: number;
+  business_state: number;
+  confirmations: number;
+  pending_actions: number;
+  resources: number;
+  audit_events: number;
+};
+
+export type SessionDeletionProposal = {
+  action: {
+    action_id: string;
+    session_id: string;
+    action_type: "delete_session_v1";
+    status: "awaiting_confirmation";
+    payload: Record<string, never>;
+    expected_state_version: number;
+    created_at: string;
+    expires_at: string;
+    consumed_at: string | null;
+  };
+  counts: SessionDeletionCounts;
+  deleted: string[];
+  retained: string[];
+};
+
+export type SessionDeletionResult = {
+  status: "deleted" | "rejected";
+  deleted_at: string | null;
+  counts: SessionDeletionCounts | null;
+  retained: string[];
+};
+
 export type AgentError = {
   code: string;
   message: string;
