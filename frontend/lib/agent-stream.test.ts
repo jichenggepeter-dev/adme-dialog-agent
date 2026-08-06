@@ -35,6 +35,16 @@ describe("Agent NDJSON stream", () => {
     expect(response).toMatchObject({ message_id: "msg_1", text: "Hello world", state_version: 1 });
   });
 
+  it("deduplicates an identical legacy event without an activity timestamp", async () => {
+    const heartbeat = JSON.stringify({ ...envelope, type: "heartbeat", sequence: 0 });
+    const body = `${heartbeat}\n${heartbeat}\n${JSON.stringify(completed(1))}\n`;
+
+    await expect(consumeAgentEventStream(streamChunks([body]), identity)).resolves.toMatchObject({
+      message_id: "msg_1",
+      state_version: 1,
+    });
+  });
+
   it.each([
     ["unknown event", { ...envelope, type: "mystery", sequence: 0 }, "AGENT_STREAM_INVALID"],
     ["wrong identity", { ...envelope, session_id: "session_2", type: "heartbeat", sequence: 0 }, "AGENT_STREAM_INVALID"],

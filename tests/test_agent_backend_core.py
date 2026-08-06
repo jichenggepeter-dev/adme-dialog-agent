@@ -60,6 +60,35 @@ def test_name_cid_and_valid_smiles_all_stop_at_confirmation(
     ) is None
 
 
+def test_tool_activity_exposes_only_bounded_operation_timing(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = repository(tmp_path)
+    session = repo.create_session()
+    monkeypatch.setattr(tool_service_module, "resolve_compound", resolved_fixture)
+    context = ToolExecutionContext(session["session_id"], repo, state_version=0)
+
+    AgentToolService(context).resolve_compound("aspirin")
+
+    activity = context.tool_activity[0]
+    assert set(activity) == {
+        "tool_name",
+        "status",
+        "error_code",
+        "resource_id",
+        "started_at",
+        "completed_at",
+        "duration_ms",
+    }
+    assert datetime.fromisoformat(activity["started_at"]) <= datetime.fromisoformat(
+        activity["completed_at"]
+    )
+    assert activity["duration_ms"] >= 0
+    serialized = str(activity).lower()
+    for forbidden in ("api_key", "authorization", "prompt", "arguments", "payload"):
+        assert forbidden not in serialized
+
+
 def test_confirmed_compound_predicts_once_and_replay_is_rejected(
     tmp_path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

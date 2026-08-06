@@ -98,6 +98,9 @@ def test_response_events_are_deterministic_monotonic_and_reassemble_text() -> No
             "status": "completed",
             "error_code": None,
             "resource_id": "resource_1",
+            "started_at": "2026-08-06T12:00:00+00:00",
+            "completed_at": "2026-08-06T12:00:00.025000+00:00",
+            "duration_ms": 25,
         }
     ]
     events = list(
@@ -108,7 +111,9 @@ def test_response_events_are_deterministic_monotonic_and_reassemble_text() -> No
         )
     )
     assert [event.sequence for event in events] == list(range(1, len(events) + 1))
-    assert events[0].type == "tool_completed"
+    assert [events[0].type, events[1].type] == ["tool_started", "tool_completed"]
+    assert events[0].occurred_at <= events[1].occurred_at
+    assert events[1].tool_activity.duration_ms == 25
     assert "".join(
         event.delta for event in events if event.type == "message_delta"
     ) == text
@@ -119,6 +124,37 @@ def test_response_events_are_deterministic_monotonic_and_reassemble_text() -> No
         assert event.session_id == STREAM_IDENTITY["session_id"]
         assert event.message_id == STREAM_IDENTITY["message_id"]
         assert event.correlation_id == STREAM_IDENTITY["correlation_id"]
+        assert event.occurred_at is not None
+
+
+def test_activity_stream_serialization_contains_no_sensitive_trace_fields() -> None:
+    response = _response()
+    response["tool_activity"] = [
+        {
+            "tool_name": "search_adme_evidence",
+            "status": "completed",
+            "error_code": None,
+            "resource_id": None,
+            "started_at": "2026-08-06T12:00:00+00:00",
+            "completed_at": "2026-08-06T12:00:00.010000+00:00",
+            "duration_ms": 10,
+        }
+    ]
+
+    serialized = "\n".join(
+        event.model_dump_json()
+        for event in response_events(response, **STREAM_IDENTITY, start_sequence=0)
+    ).lower()
+
+    for forbidden in (
+        "api_key",
+        "authorization",
+        "provider_prompt",
+        "raw_provider",
+        "tool_arguments",
+        "chain_of_thought",
+    ):
+        assert forbidden not in serialized
 
 
 def test_stream_route_preserves_non_streaming_runtime_and_persisted_message_id(
@@ -261,7 +297,8 @@ def test_internal_failure_is_a_single_stable_public_error(tmp_path) -> None:
     assert [event["type"] for event in events] == ["heartbeat", "error"]
     assert len(_terminal_events(events)) == 1
     error = events[-1]
-    assert error == {
+    assert isinstance(error["occurred_at"], str)
+    assert {key: value for key, value in error.items() if key != "occurred_at"} == {
         "version": 1,
         "type": "error",
         "session_id": session["session_id"],
