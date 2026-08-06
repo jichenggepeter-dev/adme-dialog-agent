@@ -6,6 +6,7 @@ import { useAssistant } from "@/contexts/assistant-provider";
 import { AssistantLauncher } from "./assistant-launcher";
 import { ConfirmationCard, PendingActionCard, StructuredCard } from "./cards/structured-card";
 import { AssistantMarkdown } from "./assistant-markdown";
+import { SessionExportControls } from "./session-export-controls";
 import { downloadPrediction } from "@/components/export-actions";
 import { MOCK_AGENT_MODE, MOCK_SCENARIOS, type MockScenarioId } from "@/lib/review-mode";
 
@@ -13,7 +14,7 @@ const TOOL_LABELS: Record<string, string> = { resolve_compound: "Resolved compou
 const STREAM_LABELS = { idle: "", connecting: "Connecting…", generating: "Generating response…", tool: "Using an approved scientific tool…", waiting_confirmation: "Waiting for your confirmation", completed: "Response complete", failed: "Response stopped" } as const;
 
 export function AssistantPanel() {
-  const { open, closing, setOpen, ready, loading, messages, pending, pendingAction, error, streamStatus, actionPhase, actionResult, guidedPrediction, mockScenario, setMockScenario, send, cancelStream, decide, decideAction, clearError } = useAssistant();
+  const { open, closing, setOpen, ready, loading, sessionId, stateVersion, messages, pending, pendingAction, error, streamStatus, actionPhase, actionResult, guidedPrediction, mockScenario, setMockScenario, send, cancelStream, decide, decideAction, clearError } = useAssistant();
   const [draft, setDraft] = useState(""); const messageListRef = useRef<HTMLDivElement>(null); const pathname = usePathname();
   const batch = pathname.startsWith("/batch");
   useEffect(() => {
@@ -23,7 +24,7 @@ export function AssistantPanel() {
   function submit(event: React.FormEvent) { event.preventDefault(); const value = draft.trim(); if (!value) return; setDraft(""); void send(value); }
   return <><AssistantLauncher />{open ? <aside className={`assistant-panel assistant-panel-docked ${closing ? "is-closing" : ""} action-${actionPhase}`} aria-label="ADME Assistant" role="complementary">
     <header className="assistant-header"><div><span className="assistant-mark"><ChatCircleDots size={20} weight="fill" /></span><div><strong>ADME Assistant</strong><small><i /> {MOCK_AGENT_MODE ? "Mock Agent v1 · deterministic review" : "Scientific workspace copilot"}</small></div></div><button className="icon-button" aria-label="Close Assistant" onClick={() => setOpen(false)}><X size={19} /></button></header>
-    <div className="assistant-context"><span>Current context</span><strong>{batch ? "Batch Screening" : pathname.startsWith("/about") ? "Model Information" : "Single Molecule"}</strong></div>
+    <div className="assistant-context"><div><span>Current context</span><strong>{batch ? "Batch Screening" : pathname.startsWith("/about") ? "Model Information" : "Single Molecule"}</strong></div><SessionExportControls sessionId={sessionId} stateVersion={stateVersion} disabled={!ready || loading} /></div>
     {MOCK_AGENT_MODE ? <div className="assistant-scenario"><label htmlFor="mock-scenario">Test scenario</label><select id="mock-scenario" value={mockScenario} onChange={(event) => setMockScenario(event.target.value as MockScenarioId)} disabled={loading}>{MOCK_SCENARIOS.map((scenario) => <option key={scenario.id} value={scenario.id}>{scenario.label}</option>)}</select><p>{MOCK_SCENARIOS.find((scenario) => scenario.id === mockScenario)?.description} Your message is recorded but does not change this fixed behavior.</p></div> : null}
     <div className="assistant-messages" aria-live="polite" ref={messageListRef}>
       {!messages.length && ready ? <div className="assistant-welcome"><ChatCircleDots size={27} /><h2>How can I help?</h2><p>{batch ? "Ask for batch upload guidance, status, issues, filters, endpoint columns, or a neutral comparison." : "Ask about a compound, endpoint, model limitation, or the current batch. Structures require confirmation before prediction."}</p><div>{batch ? <><button onClick={() => setDraft(pathname === "/batch" ? "帮我上传并分析一个 Batch 文件。" : "总结当前批次状态和数据质量。")}>{pathname === "/batch" ? "Upload a batch" : "Summarize this batch"}</button><button onClick={() => setDraft("只显示预测失败的分子，并选中第一条。")}>Find failed rows</button></> : <><button onClick={() => setDraft("Explain the current prediction model and its limitations.")}>Explain this model</button><button onClick={() => setDraft("Help me evaluate a small molecule.")}>Evaluate a molecule</button></>}</div></div> : null}

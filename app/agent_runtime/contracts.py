@@ -321,6 +321,216 @@ class PendingActionRequest(StrictModel):
     expected_state_version: int = Field(ge=0)
 
 
+class SessionExportPrepareRequest(StrictModel):
+    format: Literal["json", "markdown"] = "json"
+    expected_state_version: int = Field(ge=0)
+    resource_ids: list[str] = Field(default_factory=list, max_length=20)
+
+    @field_validator("resource_ids")
+    @classmethod
+    def require_unique_resource_ids(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("Resource identifiers must be unique.")
+        return value
+
+
+class SessionExportDecisionRequest(StrictModel):
+    decision: Literal["approve", "reject"]
+    expected_state_version: int = Field(ge=0)
+
+
+class SessionExportAction(StrictModel):
+    action_id: str
+    session_id: str
+    action_type: Literal["session_export_v1"]
+    status: Literal[
+        "awaiting_confirmation",
+        "executing",
+        "succeeded",
+        "failed",
+        "rejected",
+        "expired",
+    ]
+    payload: dict[str, Any] = Field(default_factory=dict)
+    expected_state_version: int = Field(ge=0)
+    created_at: datetime
+    expires_at: datetime
+    consumed_at: datetime | None = None
+
+
+class SessionExportProposalCounts(StrictModel):
+    messages: int = Field(ge=0)
+    confirmations: int = Field(ge=0)
+    activities: int = Field(ge=0)
+    resources: int = Field(ge=0)
+    selected_resources: int = Field(ge=0)
+
+
+class SessionExportProposal(StrictModel):
+    action: SessionExportAction
+    schema_version: Literal["1.0"] = "1.0"
+    included: list[str]
+    excluded: list[str]
+    max_export_bytes: int
+    snapshot_taken_at: datetime
+    counts: SessionExportProposalCounts
+
+
+class SessionExportMetadata(StrictModel):
+    status: Literal["active"]
+    created_at: datetime
+    expires_at: datetime
+    state_version: int = Field(ge=0)
+
+
+class SessionExportMessage(StrictModel):
+    message_id: str
+    role: Literal["user", "assistant"]
+    content: str
+    created_at: datetime
+
+
+class SessionExportConfirmation(StrictModel):
+    confirmation_id: str
+    type: str
+    status: str
+    payload_hash: str
+    expected_state_version: int = Field(ge=0)
+    created_at: datetime
+    expires_at: datetime
+    consumed_at: datetime | None = None
+    result_resource_id: str | None = None
+    error_code: str | None = None
+
+
+class SessionExportActivity(StrictModel):
+    event_type: str
+    tool_name: str | None = None
+    duration_ms: int | None = None
+    status: str
+    error_code: str | None = None
+    created_at: datetime
+
+
+class SessionExportActivityWindow(StrictModel):
+    limit: int
+    total_available: int
+    included_count: int
+    older_omitted_count: int
+    events: list[SessionExportActivity]
+
+
+class SessionExportResourceManifest(StrictModel):
+    resource_id: str
+    resource_type: str
+    content_hash: str
+    size_bytes: int = Field(ge=0)
+    created_at: datetime
+    expires_at: datetime
+
+
+class SessionExportCompoundData(StrictModel):
+    kind: Literal["compound"] = "compound"
+    compound_id: str | None = None
+    input_query: str | None = None
+    preferred_name: str | None = None
+    pubchem_cid: int | None = None
+    molecular_formula: str | None = None
+    molecular_weight: float | None = None
+    canonical_smiles: str | None = None
+    isomeric_smiles: str | None = None
+    data_source: str | None = None
+    warnings: list[str] = Field(default_factory=list)
+
+
+class SessionExportPredictionEndpoint(StrictModel):
+    endpoint: str
+    display_name: str | None = None
+    value: float | int | str | bool | None = None
+    output_type: str | None = None
+    positive_class: str | None = None
+    supports_probability_language: bool | None = None
+    unit: str | None = None
+    unit_verified: bool | None = None
+    metadata_status: str | None = None
+
+
+class SessionExportPredictionCategory(StrictModel):
+    category: str
+    endpoints: list[SessionExportPredictionEndpoint]
+
+
+class SessionExportPredictionData(StrictModel):
+    kind: Literal["prediction"] = "prediction"
+    prediction_id: str | None = None
+    compound_id: str | None = None
+    prediction_mode: Literal["mock", "real"]
+    summary: str | None = None
+    disclaimer: str | None = None
+    warnings: list[str] = Field(default_factory=list)
+    categories: list[SessionExportPredictionCategory] = Field(default_factory=list)
+
+
+SessionExportResourceData = Annotated[
+    SessionExportCompoundData | SessionExportPredictionData,
+    Field(discriminator="kind"),
+]
+
+
+class SessionExportSelectedResource(SessionExportResourceManifest):
+    data: SessionExportResourceData
+
+
+class SessionExportLimits(StrictModel):
+    messages: int
+    confirmations: int
+    activities: int
+    resource_manifest: int
+    selected_resources: int
+    final_bytes: int
+
+
+class SessionExportDocument(StrictModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "$id": "https://github.com/jichenggepeter-dev/adme-dialog-agent/blob/main/docs/schemas/agent-session-export-v1.schema.json",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+        },
+    )
+    export_schema_version: Literal["1.0"] = "1.0"
+    exported_at: datetime
+    snapshot_taken_at: datetime
+    prediction_mode: Literal["mock", "real", "mixed", "unknown"]
+    session: SessionExportMetadata
+    included_fields: list[str]
+    excluded_fields: list[str]
+    limits: SessionExportLimits
+    messages: list[SessionExportMessage]
+    confirmations: list[SessionExportConfirmation]
+    activity: SessionExportActivityWindow
+    resources: list[SessionExportResourceManifest]
+    selected_resources: list[SessionExportSelectedResource]
+
+
+class SessionExportResult(StrictModel):
+    status: Literal["succeeded", "rejected"]
+    filename: str | None = None
+    media_type: str | None = None
+    content: str | None = None
+    size_bytes: int | None = Field(default=None, ge=0)
+    schema_version: Literal["1.0"] = "1.0"
+
+    @model_validator(mode="after")
+    def require_download_fields_only_for_success(self) -> SessionExportResult:
+        fields = (self.filename, self.media_type, self.content, self.size_bytes)
+        if self.status == "succeeded" and any(value is None for value in fields):
+            raise ValueError("Successful exports require complete download fields.")
+        if self.status == "rejected" and any(value is not None for value in fields):
+            raise ValueError("Rejected exports cannot contain download fields.")
+        return self
+
+
 class ToolResultEnvelope(StrictModel):
     tool_name: str
     status: Literal["ok", "error", "confirmation_required"]

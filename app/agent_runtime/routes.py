@@ -4,7 +4,7 @@ from functools import lru_cache
 import re
 from uuid import uuid4
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, Response
 from fastapi.responses import StreamingResponse
 
 from app.agent_runtime.contracts import (
@@ -17,10 +17,15 @@ from app.agent_runtime.contracts import (
     PendingAction,
     PendingActionRequest,
     ResourceResponse,
+    SessionExportDecisionRequest,
+    SessionExportPrepareRequest,
+    SessionExportProposal,
+    SessionExportResult,
 )
 from app.agent_runtime.errors import AgentCoreError
 from app.agent_runtime.repositories import AgentRepository
 from app.agent_runtime.runtime import AgentRuntime, default_repository_path
+from app.agent_runtime.session_exports import SessionExportService
 from app.agent_runtime.streaming import STREAM_MEDIA_TYPE, stream_agent_chat
 from app.settings import is_agent_enabled
 
@@ -60,6 +65,47 @@ def get_agent_messages(
 ) -> dict:
     require_agent_enabled()
     return get_agent_runtime().repository.list_messages(session_id, limit, offset)
+
+
+@router.post(
+    "/sessions/{session_id}/exports",
+    response_model=SessionExportProposal,
+)
+def prepare_session_export(
+    session_id: str,
+    export_request: SessionExportPrepareRequest,
+    response: Response,
+) -> dict:
+    require_agent_enabled()
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return SessionExportService(get_agent_runtime().repository).prepare(
+        session_id,
+        export_format=export_request.format,
+        expected_state_version=export_request.expected_state_version,
+        resource_ids=export_request.resource_ids,
+    )
+
+
+@router.post(
+    "/sessions/{session_id}/exports/{action_id}",
+    response_model=SessionExportResult,
+)
+def decide_session_export(
+    session_id: str,
+    action_id: str,
+    export_request: SessionExportDecisionRequest,
+    request: Request,
+    response: Response,
+) -> dict:
+    require_agent_enabled()
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return SessionExportService(get_agent_runtime().repository).decide(
+        session_id,
+        action_id,
+        decision=export_request.decision,
+        expected_state_version=export_request.expected_state_version,
+        correlation_id=_correlation_id(request),
+    )
 
 
 @router.post("/chat", response_model=AgentChatResponse)

@@ -688,6 +688,43 @@ class AgentRepository:
             raise AgentCoreError("ACTION_STALE", "Pending action is not executing.", 409)
         return self.get_pending_action(session_id, action_id)
 
+    def finish_pending_action_with_audit(
+        self,
+        session_id: str,
+        action_id: str,
+        *,
+        action_type: str,
+        correlation_id: str,
+        event_type: str,
+        summary: dict[str, Any],
+    ) -> dict:
+        """Commit a successful terminal action and its redacted audit together."""
+        now = _iso(_now())
+        with self.connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            result = connection.execute(
+                """UPDATE agent_pending_actions SET status='succeeded', consumed_at=?
+                   WHERE action_id=? AND session_id=? AND action_type=?
+                     AND status='executing'""",
+                (now, action_id, session_id, action_type),
+            )
+            if result.rowcount != 1:
+                connection.rollback()
+                raise AgentCoreError("ACTION_STALE", "Pending action is not executing.", 409)
+            connection.execute(
+                "INSERT INTO agent_audit_events VALUES (?, ?, ?, ?, NULL, NULL, NULL, 'ok', NULL, ?, ?)",
+                (
+                    f"audit_{uuid4().hex}",
+                    session_id,
+                    correlation_id,
+                    event_type,
+                    _json(summary),
+                    now,
+                ),
+            )
+            connection.commit()
+        return self.get_pending_action(session_id, action_id)
+
     def get_resource(self, session_id: str, resource_id: str) -> dict:
         with self.connection() as connection:
             row = connection.execute(
@@ -706,6 +743,114 @@ class AgentRepository:
             result = dict(row)
             result["data"] = json.loads(result.pop("content_json"))
             return result
+
+    def get_session_export_snapshot(
+        self,
+        session_id: str,
+        resource_ids: list[str],
+        *,
+        message_limit: int,
+        confirmation_limit: int,
+        activity_limit: int,
+        resource_limit: int,
+    ) -> dict:
+        """Read one consistent, session-owned snapshot for a bounded export."""
+        now = _now()
+        now_iso = _iso(now)
+        with self.connection() as connection:
+            connection.execute("BEGIN")
+            session = connection.execute(
+                "SELECT * FROM agent_sessions WHERE session_id = ?",
+                (session_id,),
+            ).fetchone()
+            if session is None:
+                raise AgentCoreError("SESSION_NOT_FOUND", "Agent session was not found.", 404)
+            if session["status"] != "active" or _parse(session["expires_at"]) <= now:
+                raise AgentCoreError("SESSION_EXPIRED", "Agent session has expired.", 410)
+
+            messages = connection.execute(
+                """SELECT message_id, role, content, created_at
+                   FROM agent_messages
+                   WHERE session_id = ? AND role IN ('user', 'assistant')
+                   ORDER BY created_at, message_id LIMIT ?""",
+                (session_id, message_limit + 1),
+            ).fetchall()
+            confirmations = connection.execute(
+                """SELECT confirmation_id, type, status, payload_hash,
+                          expected_state_version, created_at, expires_at, consumed_at,
+                          result_resource_id, error_code
+                   FROM agent_confirmations WHERE session_id = ?
+                   ORDER BY created_at, confirmation_id LIMIT ?""",
+                (session_id, confirmation_limit + 1),
+            ).fetchall()
+            activity_total = connection.execute(
+                "SELECT COUNT(*) FROM agent_audit_events WHERE session_id = ?",
+                (session_id,),
+            ).fetchone()[0]
+            activity = connection.execute(
+                """SELECT event_id, event_type, tool_name, duration_ms, status,
+                          error_code, created_at
+                   FROM agent_audit_events WHERE session_id = ?
+                   ORDER BY created_at DESC, event_id DESC LIMIT ?""",
+                (session_id, activity_limit),
+            ).fetchall()
+            resources = connection.execute(
+                """SELECT resource_id, resource_type, content_hash, size_bytes,
+                          created_at, expires_at
+                   FROM agent_resources
+                   WHERE session_id = ? AND expires_at > ?
+                     AND resource_type IN ('compound', 'prediction')
+                   ORDER BY created_at, resource_id LIMIT ?""",
+                (session_id, now_iso, resource_limit + 1),
+            ).fetchall()
+
+            selected: list[dict] = []
+            for resource_id in resource_ids:
+                row = connection.execute(
+                    """SELECT resource_id, resource_type, content_json, content_hash,
+                              size_bytes, created_at, expires_at
+                       FROM agent_resources
+                       WHERE resource_id = ? AND session_id = ? AND expires_at > ?""",
+                    (resource_id, session_id, now_iso),
+                ).fetchone()
+                if row is None:
+                    raise AgentCoreError(
+                        "RESOURCE_NOT_FOUND", "Agent resource was not found.", 404
+                    )
+                if _hash(row["content_json"]) != row["content_hash"]:
+                    raise AgentCoreError(
+                        "TOOL_RESULT_INVALID", "Resource integrity check failed.", 500
+                    )
+                value = dict(row)
+                value["data"] = json.loads(value.pop("content_json"))
+                selected.append(value)
+
+            prediction_modes: list[str] = []
+            prediction_rows = connection.execute(
+                """SELECT content_json, content_hash FROM agent_resources
+                   WHERE session_id = ? AND resource_type = 'prediction' AND expires_at > ?
+                   ORDER BY resource_id""",
+                (session_id, now_iso),
+            ).fetchall()
+            for row in prediction_rows:
+                if _hash(row["content_json"]) != row["content_hash"]:
+                    raise AgentCoreError(
+                        "TOOL_RESULT_INVALID", "Resource integrity check failed.", 500
+                    )
+                mode = json.loads(row["content_json"]).get("prediction_mode")
+                if mode in {"mock", "real"}:
+                    prediction_modes.append(mode)
+
+        return {
+            "session": dict(session),
+            "messages": [dict(row) for row in messages],
+            "confirmations": [dict(row) for row in confirmations],
+            "activity": [dict(row) for row in reversed(activity)],
+            "activity_total": activity_total,
+            "resources": [dict(row) for row in resources],
+            "selected_resources": selected,
+            "prediction_modes": prediction_modes,
+        }
 
     def add_audit_event(
         self,
