@@ -6,7 +6,7 @@ release number shown by `GET /status`.
 
 | Contract | Current version | Where a client sees it |
 | --- | --- | --- |
-| REST requests and responses | `1.0` | `/openapi.json` → `info.version` and this directory |
+| REST requests and responses | `1.1` | `/openapi.json` → `info.version` and this directory |
 | Agent stream events | `1` | Each NDJSON event's `version` field |
 | Agent errors | `1` | The v1 error envelope below |
 | Confirmation flows | `1` | The v1 request and response schemas below |
@@ -35,6 +35,7 @@ route cannot be added or removed silently.
 | Batch jobs | `POST /batch/jobs`, `GET /batch/jobs/{job_id}`, `GET /batch/jobs/{job_id}/results` | `BatchJobCreateRequest` or no body → job state and results |
 | Batch actions | `POST /batch/jobs/{job_id}/run`, `/cancel` | No body → updated job state |
 | Batch export | `GET /batch/jobs/{job_id}/export`, `/errors`, `POST /batch/jobs/{job_id}/export/filtered` | Query or `BatchFilteredExportRequest` → downloadable content |
+| Local knowledge | `POST/GET /knowledge/collections`, document, reindex, and search subroutes | Strict JSON or bounded `.txt`/`.md` multipart input → local collection, document, deletion, or cited search contract |
 | Agent session | `POST /agent/sessions`, `GET /agent/sessions/{session_id}`, `/messages` | No body; session or paginated message contract |
 | Agent chat | `POST /agent/chat`, `/chat/stream` | `AgentChatRequest` → `AgentChatResponse` or v1 NDJSON events |
 | Agent decision | `POST /agent/confirm`, `/agent/actions/decide` | v1 decision request → `AgentChatResponse` |
@@ -46,6 +47,20 @@ route cannot be added or removed silently.
 OpenAPI is the field-level reference for every model named above. Existing
 specialized documents remain useful explanations: [Backend Agent API](../../agent/backend-api.md),
 [batch file format](../../batch-file-format.md), and [session export](../../session-export.md).
+
+## Local user knowledge
+
+The additive REST 1.1 routes implement the first local-only slice defined by
+[the user-document lifecycle](../../rag/user-document-lifecycle.md). They do not
+require the Agent, an API key, a model provider, embeddings, or a vector
+database. Upload accepts UTF-8 `.txt` and `.md` files plus an explicit rights
+basis. Search results are labelled `user_provided` and remain separate from the
+maintainer-approved FDA evidence corpus.
+
+The [search request](examples/knowledge-search-request.json) and
+[search response](examples/knowledge-search-response.json) show the bounded
+query and stable document/chunk citation fields. OpenAPI documents the create,
+inspect, replace, delete, reindex, and search models and limits.
 
 ## Agent chat example
 

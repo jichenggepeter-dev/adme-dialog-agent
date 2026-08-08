@@ -1,5 +1,5 @@
 {
-  "api_contract_version": "1.0",
+  "api_contract_version": "1.1",
   "confirmation_contract_version": 1,
   "error_envelope_version": 1,
   "evidence_contract_version": 1,
@@ -35,6 +35,16 @@
     {"method": "GET", "path": "/batch/jobs/{job_id}/export"},
     {"method": "POST", "path": "/batch/jobs/{job_id}/export/filtered"},
     {"method": "GET", "path": "/batch/jobs/{job_id}/errors"},
+    {"method": "POST", "path": "/knowledge/collections"},
+    {"method": "GET", "path": "/knowledge/collections"},
+    {"method": "GET", "path": "/knowledge/collections/{collection_id}"},
+    {"method": "DELETE", "path": "/knowledge/collections/{collection_id}"},
+    {"method": "POST", "path": "/knowledge/collections/{collection_id}/documents"},
+    {"method": "GET", "path": "/knowledge/collections/{collection_id}/documents/{document_id}"},
+    {"method": "POST", "path": "/knowledge/collections/{collection_id}/documents/{document_id}/replace"},
+    {"method": "DELETE", "path": "/knowledge/collections/{collection_id}/documents/{document_id}"},
+    {"method": "POST", "path": "/knowledge/collections/{collection_id}/reindex"},
+    {"method": "POST", "path": "/knowledge/collections/{collection_id}/search"},
     {"method": "POST", "path": "/predict"},
     {"method": "POST", "path": "/predict/batch"},
     {"method": "POST", "path": "/chat"}

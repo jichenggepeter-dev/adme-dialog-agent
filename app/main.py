@@ -19,6 +19,8 @@ from app.tools.admet_predictor import ADMETPredictionError, is_mock_mode, predic
 from app.tools.smiles import validate_smiles
 from app.agent_runtime.errors import AgentCoreError
 from app.agent_runtime.routes import router as agent_router
+from app.knowledge_routes import router as knowledge_router
+from app.services.knowledge import KnowledgeError
 
 
 BACKEND_VERSION = "0.1.0"
@@ -37,10 +39,11 @@ app.add_middleware(
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_origin_regex=r"http://(?:localhost|127\.0\.0\.1):\d+",
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-Correlation-ID"],
 )
 app.include_router(agent_router)
+app.include_router(knowledge_router)
 
 
 def _error_response(status_code: int, code: str, message: str, details: str | None = None) -> JSONResponse:
@@ -106,6 +109,12 @@ async def agent_core_error_handler(request: Request, exc: AgentCoreError) -> JSO
                            "retryable": exc.retryable,
                            "correlation_id": request.headers.get("X-Correlation-ID") or uuid4().hex}},
     )
+
+
+@app.exception_handler(KnowledgeError)
+async def knowledge_error_handler(request: Request, exc: KnowledgeError) -> JSONResponse:
+    logger.warning("Knowledge request failed: %s", exc.code)
+    return _error_response(exc.status_code, exc.code, str(exc))
 
 
 @app.get("/health")

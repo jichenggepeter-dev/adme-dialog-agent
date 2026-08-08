@@ -41,6 +41,7 @@ data/uploads/
 data/demo-logs/
 data/exports/
 data/sessions/
+data/knowledge/
 *.log
 
 # Browser sessions and authentication state
