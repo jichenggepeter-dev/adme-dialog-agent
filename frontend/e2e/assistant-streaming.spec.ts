@@ -21,7 +21,7 @@ test("streams one assistant message and completes without a duplicate", async ({
   await page.getByLabel("Message ADME Assistant").fill("Stream this response");
   await page.getByRole("button", { name: "Send message" }).click();
 
-  await expect(page.getByRole("status")).toContainText("Response complete");
+  await expect(page.getByRole("status").filter({ hasText: "Response complete" })).toBeVisible();
   await expect(page.locator(".assistant-message.assistant")).toHaveCount(1);
   await expect(page.locator(".assistant-message.assistant")).toContainText("Streamed answer.");
   expect(requestCount).toBe(1);

@@ -37,7 +37,7 @@ test("applies failed batch filter once", async ({ page }) => {
   await page.getByRole("button", { name: "Run Batch Prediction" }).click({ force: true });
   await expect(page).toHaveURL(/\/batch\/[0-9a-f-]+/); await openAssistant(page);
   await page.getByLabel("Message ADME Assistant").fill("只显示失败的分子。");
-  await page.getByRole("button", { name: "Send message" }).click();
+  await page.getByLabel("Message ADME Assistant").press("Enter");
   await expect(page.getByLabel("Filter prediction status")).toHaveValue("failed");
   await expect(page.locator('[data-assistant-target="batch-results"]')).toHaveClass(/assistant-target-highlight/);
 });
