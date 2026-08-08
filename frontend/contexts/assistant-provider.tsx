@@ -2,8 +2,8 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { createAgentSession, decideConfirmation, decidePendingAction, getAgentSession, getPredictionResource, streamAgentMessage, AgentApiError } from "@/lib/agent-api";
-import type { AgentActivityItem, AgentMessage, AgentResponse, AgentStreamEvent, AssistantStreamStatus, Confirmation, PageContext, PendingAction, StructuredPayload, ToolActivity } from "@/lib/agent-types";
+import { createAgentSession, decideConfirmation, decidePendingAction, decideSessionDeletion, getAgentSession, getPredictionResource, streamAgentMessage, AgentApiError } from "@/lib/agent-api";
+import type { AgentActivityItem, AgentMessage, AgentResponse, AgentStreamEvent, AssistantStreamStatus, Confirmation, PageContext, PendingAction, SessionDeletionResult, StructuredPayload, ToolActivity } from "@/lib/agent-types";
 import { applyStreamEvent, finalizeStreamedMessage } from "@/lib/assistant-stream-state";
 import { getAssistantPageContext } from "@/lib/assistant-page-state";
 import { executeUIAction, shouldCollapseForAction, type UIActionExecutionResult } from "@/lib/ui-action-dispatcher";
@@ -17,7 +17,7 @@ import {
 } from "@/lib/review-mode";
 
 export type ViewMessage = AgentMessage & { payloads?: StructuredPayload[]; tools?: ToolActivity[]; activity?: AgentActivityItem[]; stream_correlation_id?: string };
-type AssistantState = { open: boolean; closing: boolean; ready: boolean; loading: boolean; sessionId: string | null; messages: ViewMessage[]; pending: Confirmation | null; pendingAction: PendingAction | null; error: AgentApiError | null; stateVersion: number; streamStatus: AssistantStreamStatus; actionPhase: ActionPhase; actionResult: UIActionExecutionResult | null; guidedMode: boolean; guidedPrediction: PredictionResponse | null; mockScenario: MockScenarioId; setMockScenario: (scenario: MockScenarioId) => void; send: (text: string) => Promise<void>; cancelStream: () => void; decide: (decision: "approve" | "reject") => Promise<void>; decideAction: (decision: "approve" | "reject") => Promise<void>; setOpen: (value: boolean) => void; exitGuidedMode: () => void; clearError: () => void };
+type AssistantState = { open: boolean; closing: boolean; ready: boolean; loading: boolean; sessionId: string | null; messages: ViewMessage[]; pending: Confirmation | null; pendingAction: PendingAction | null; error: AgentApiError | null; stateVersion: number; streamStatus: AssistantStreamStatus; actionPhase: ActionPhase; actionResult: UIActionExecutionResult | null; guidedMode: boolean; guidedPrediction: PredictionResponse | null; mockScenario: MockScenarioId; setMockScenario: (scenario: MockScenarioId) => void; send: (text: string) => Promise<void>; cancelStream: () => void; decide: (decision: "approve" | "reject") => Promise<void>; decideAction: (decision: "approve" | "reject") => Promise<void>; deleteCurrentSession: (actionId: string) => Promise<SessionDeletionResult>; setOpen: (value: boolean) => void; exitGuidedMode: () => void; clearError: () => void };
 const Context = createContext<AssistantState | null>(null);
 
 function routeContext(pathname: string): PageContext {
@@ -35,6 +35,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [streamStatus, setStreamStatus] = useState<AssistantStreamStatus>("idle");
   const streamAbortRef = useRef<AbortController | null>(null);
+  const sessionGenerationRef = useRef(0);
   const [actionPhase, setActionPhase] = useState<ActionPhase>("idle"); const [actionResult, setActionResult] = useState<UIActionExecutionResult | null>(null);
   const [guidedMode, setGuidedMode] = useState(false); const [guidedPrediction, setGuidedPrediction] = useState<PredictionResponse | null>(null);
   const [mockScenario, setMockScenario] = useState<MockScenarioId>(DEFAULT_MOCK_SCENARIO);
@@ -104,6 +105,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   }, [pathname, router, sessionId, setOpen]);
 
   const send = useCallback(async (text: string) => { if (!sessionId || loading || !text.trim()) return; setLoading(true); setError(null); setStreamStatus("connecting");
+    const generation = sessionGenerationRef.current;
     setMessages((items) => [...items, { message_id: crypto.randomUUID(), session_id: sessionId, role: "user", content: text.trim(), created_at: new Date().toISOString(), metadata: {} }]);
     const controller = new AbortController();
     streamAbortRef.current = controller;
@@ -111,6 +113,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
       const fallback = routeContext(window.location.pathname);
       const pageContext = getAssistantPageContext(fallback);
       const onEvent = (event: AgentStreamEvent) => {
+        if (sessionGenerationRef.current !== generation) return;
         setMessages((items) => applyStreamEvent(items, event));
         if (event.type === "tool_started" || event.type === "tool_completed") setStreamStatus("tool");
         else if (event.type === "confirmation_required") setStreamStatus("waiting_confirmation");
@@ -123,9 +126,11 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
         onEvent,
         mockScenario: MOCK_AGENT_MODE ? mockScenarioSelection(mockScenario) : undefined,
       });
+      if (sessionGenerationRef.current !== generation) return;
       await ingest(response, true);
       setStreamStatus(response.pending_confirmation || response.pending_action ? "waiting_confirmation" : "completed");
     } catch (caught) {
+      if (sessionGenerationRef.current !== generation) return;
       setStreamStatus("failed");
       setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "The Assistant request failed."));
       try {
@@ -134,7 +139,11 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
       } catch {
         // Preserve the original stream error when the recovery read is unavailable.
       }
-    } finally { streamAbortRef.current = null; setLoading(false); }
+    } finally {
+      if (sessionGenerationRef.current === generation) {
+        streamAbortRef.current = null; setLoading(false);
+      }
+    }
   }, [ingest, loading, mockScenario, sessionId, stateVersion]);
 
   const cancelStream = useCallback(() => { streamAbortRef.current?.abort(); }, []);
@@ -155,7 +164,30 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     } catch (caught) { setStreamStatus("failed"); setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_ERROR", "Batch action confirmation failed.")); } finally { setLoading(false); }
   }, [ingest, loading, pendingAction, router, sessionId, stateVersion]);
 
-  const value = useMemo(() => ({ open, closing, ready, loading, sessionId, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, mockScenario, setMockScenario, send, cancelStream, decide, decideAction, setOpen, exitGuidedMode: () => setGuidedMode(false), clearError: () => setError(null) }), [open, closing, ready, loading, sessionId, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, mockScenario, send, cancelStream, decide, decideAction, setOpen]);
+  const deleteCurrentSession = useCallback(async (actionId: string) => {
+    if (!sessionId || loading) throw new AgentApiError("SESSION_NOT_FOUND", "No active session is available.");
+    sessionGenerationRef.current += 1;
+    const deletionGeneration = sessionGenerationRef.current;
+    setLoading(true); setError(null); streamAbortRef.current?.abort();
+    try {
+      const result = await decideSessionDeletion(sessionId, actionId, "approve", stateVersion);
+      if (result.status !== "deleted") throw new AgentApiError("AGENT_RESPONSE_INVALID", "The session was not deleted.");
+      setSessionId(null); setStateVersion(0); setMessages([]); setPending(null); setPendingAction(null);
+      setStreamStatus("idle"); setActionPhase("idle"); setActionResult(null);
+      setGuidedMode(false); setGuidedPrediction(null); setMockScenario(DEFAULT_MOCK_SCENARIO); setReady(false);
+      try {
+        const replacement = await createAgentSession();
+        if (sessionGenerationRef.current === deletionGeneration) {
+          setSessionId(replacement.session_id); setStateVersion(replacement.state_version);
+        }
+      } catch (caught) {
+        setError(caught instanceof AgentApiError ? caught : new AgentApiError("AGENT_OFFLINE", "The deleted session could not be replaced."));
+      } finally { setReady(true); }
+      return result;
+    } finally { setLoading(false); }
+  }, [loading, sessionId, stateVersion]);
+
+  const value = useMemo(() => ({ open, closing, ready, loading, sessionId, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, mockScenario, setMockScenario, send, cancelStream, decide, decideAction, deleteCurrentSession, setOpen, exitGuidedMode: () => setGuidedMode(false), clearError: () => setError(null) }), [open, closing, ready, loading, sessionId, messages, pending, pendingAction, error, stateVersion, streamStatus, actionPhase, actionResult, guidedMode, guidedPrediction, mockScenario, send, cancelStream, decide, decideAction, deleteCurrentSession, setOpen]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useAssistant() { const value = useContext(Context); if (!value) throw new Error("useAssistant must be inside AssistantProvider"); return value; }

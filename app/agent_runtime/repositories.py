@@ -12,7 +12,7 @@ from uuid import uuid4
 from app.agent_runtime.errors import AgentCoreError
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 DEFAULT_SESSION_TTL_SECONDS = 24 * 60 * 60
 DEFAULT_CONFIRMATION_TTL_SECONDS = 15 * 60
 DEFAULT_RESOURCE_TTL_SECONDS = 24 * 60 * 60
@@ -32,6 +32,13 @@ class AgentRepository:
         connection.execute("PRAGMA foreign_keys = ON")
         try:
             yield connection
+        except sqlite3.IntegrityError as exc:
+            connection.rollback()
+            if "FOREIGN KEY constraint failed" in str(exc):
+                raise AgentCoreError(
+                    "SESSION_NOT_FOUND", "Agent session was not found.", 404
+                ) from exc
+            raise
         finally:
             connection.close()
 
@@ -121,6 +128,12 @@ class AgentRepository:
                     summary_json TEXT NOT NULL,
                     created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS agent_session_deletions (
+                    session_hash TEXT PRIMARY KEY,
+                    action_hash TEXT NOT NULL,
+                    deleted_at TEXT NOT NULL,
+                    counts_json TEXT NOT NULL
+                );
                 """
             )
             row = connection.execute("SELECT version FROM agent_schema LIMIT 1").fetchone()
@@ -128,21 +141,26 @@ class AgentRepository:
                 connection.execute(
                     "INSERT INTO agent_schema(version) VALUES (?)", (SCHEMA_VERSION,)
                 )
-            elif row["version"] == 1:
-                connection.execute(
-                    "ALTER TABLE agent_confirmations ADD COLUMN version INTEGER NOT NULL DEFAULT 0"
-                )
-                connection.execute(
-                    "ALTER TABLE agent_confirmations ADD COLUMN result_resource_id TEXT"
-                )
-                connection.execute(
-                    "ALTER TABLE agent_confirmations ADD COLUMN error_code TEXT"
-                )
-                connection.execute("UPDATE agent_schema SET version = ?", (SCHEMA_VERSION,))
-            elif row["version"] != SCHEMA_VERSION:
-                raise AgentCoreError(
-                    "AGENT_SCHEMA_MISMATCH", "Agent database schema is incompatible.", 500
-                )
+            else:
+                version = row["version"]
+                if version == 1:
+                    connection.execute(
+                        "ALTER TABLE agent_confirmations ADD COLUMN version INTEGER NOT NULL DEFAULT 0"
+                    )
+                    connection.execute(
+                        "ALTER TABLE agent_confirmations ADD COLUMN result_resource_id TEXT"
+                    )
+                    connection.execute(
+                        "ALTER TABLE agent_confirmations ADD COLUMN error_code TEXT"
+                    )
+                    version = 2
+                if version == 2:
+                    version = 3
+                if version != SCHEMA_VERSION:
+                    raise AgentCoreError(
+                        "AGENT_SCHEMA_MISMATCH", "Agent database schema is incompatible.", 500
+                    )
+                connection.execute("UPDATE agent_schema SET version = ?", (version,))
             connection.commit()
 
     def create_session(self, ttl_seconds: int = DEFAULT_SESSION_TTL_SECONDS) -> dict:
@@ -553,11 +571,13 @@ class AgentRepository:
         payload: dict[str, Any],
         expected_state_version: int,
         ttl_seconds: int = DEFAULT_CONFIRMATION_TTL_SECONDS,
+        *,
+        action_id: str | None = None,
     ) -> dict:
         session = self.get_session(session_id)
         if session["state_version"] != expected_state_version:
             raise AgentCoreError("ACTION_STALE", "Agent state version is stale.", 409)
-        action_id = f"action_{uuid4().hex}"
+        stored_action_id = action_id or f"action_{uuid4().hex}"
         payload_json = _json(payload)
         created = _now()
         expires = created + timedelta(seconds=ttl_seconds)
@@ -566,7 +586,7 @@ class AgentRepository:
                 """INSERT INTO agent_pending_actions
                    VALUES (?, ?, ?, 'awaiting_confirmation', ?, ?, ?, ?, ?, NULL)""",
                 (
-                    action_id,
+                    stored_action_id,
                     session_id,
                     action_type,
                     payload_json,
@@ -577,7 +597,97 @@ class AgentRepository:
                 ),
             )
             connection.commit()
-        return self.get_pending_action(session_id, action_id)
+        return self.get_pending_action(session_id, stored_action_id)
+
+    def prepare_session_deletion(
+        self,
+        session_id: str,
+        *,
+        expected_state_version: int,
+        action_id: str,
+        ttl_seconds: int = DEFAULT_CONFIRMATION_TTL_SECONDS,
+    ) -> tuple[dict, dict[str, int]]:
+        """Create the deletion control record without touching session data."""
+        created = _now()
+        expires = created + timedelta(seconds=ttl_seconds)
+        with self.connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            session = connection.execute(
+                "SELECT * FROM agent_sessions WHERE session_id = ?", (session_id,)
+            ).fetchone()
+            if session is None:
+                raise AgentCoreError("SESSION_NOT_FOUND", "Agent session was not found.", 404)
+            if session["status"] != "active" or _parse(session["expires_at"]) <= created:
+                raise AgentCoreError("SESSION_EXPIRED", "Agent session has expired.", 410)
+            if session["state_version"] != expected_state_version:
+                raise AgentCoreError("ACTION_STALE", "Agent state version is stale.", 409)
+
+            snapshot = _session_deletion_snapshot(connection, session_id)
+            payload_json = _json(
+                {
+                    "snapshot_hash": _hash(_json(snapshot)),
+                    "policy_version": 1,
+                }
+            )
+            connection.execute(
+                """INSERT INTO agent_pending_actions
+                   VALUES (?, ?, 'delete_session_v1', 'awaiting_confirmation',
+                           ?, ?, ?, ?, ?, NULL)""",
+                (
+                    action_id,
+                    session_id,
+                    payload_json,
+                    _hash(payload_json),
+                    expected_state_version,
+                    _iso(created),
+                    _iso(expires),
+                ),
+            )
+            counts = _session_deletion_counts(connection, session_id)
+            connection.commit()
+        return self.get_pending_action(session_id, action_id), counts
+
+    def reject_session_deletion(
+        self,
+        session_id: str,
+        action_id: str,
+        *,
+        expected_state_version: int,
+    ) -> None:
+        """Reject one deletion proposal without adding messages or touching the session."""
+        now = _now()
+        with self.connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            session = connection.execute(
+                "SELECT state_version FROM agent_sessions WHERE session_id = ?",
+                (session_id,),
+            ).fetchone()
+            if session is None:
+                raise AgentCoreError("SESSION_NOT_FOUND", "Agent session was not found.", 404)
+            action = connection.execute(
+                """SELECT * FROM agent_pending_actions
+                   WHERE action_id = ? AND session_id = ? AND action_type = 'delete_session_v1'""",
+                (action_id, session_id),
+            ).fetchone()
+            if action is None:
+                raise AgentCoreError("ACTION_NOT_ALLOWED", "Deletion action was not found.", 404)
+            if action["status"] != "awaiting_confirmation" or _parse(action["expires_at"]) <= now:
+                raise AgentCoreError("ACTION_STALE", "Deletion action is stale.", 409)
+            if (
+                action["expected_state_version"] != expected_state_version
+                or session["state_version"] != expected_state_version
+            ):
+                raise AgentCoreError("ACTION_STALE", "Agent state version is stale.", 409)
+            if _hash(action["payload_json"]) != action["payload_hash"]:
+                raise AgentCoreError("TOOL_RESULT_INVALID", "Action payload integrity failed.", 409)
+            changed = connection.execute(
+                """UPDATE agent_pending_actions SET status = 'rejected', consumed_at = ?
+                   WHERE action_id = ? AND session_id = ? AND status = 'awaiting_confirmation'""",
+                (_iso(now), action_id, session_id),
+            )
+            if changed.rowcount != 1:
+                raise AgentCoreError("ACTION_STALE", "Deletion action is stale.", 409)
+            connection.commit()
 
     def get_pending_action(self, session_id: str, action_id: str) -> dict:
         with self.connection() as connection:
@@ -687,6 +797,114 @@ class AgentRepository:
         if result.rowcount != 1:
             raise AgentCoreError("ACTION_STALE", "Pending action is not executing.", 409)
         return self.get_pending_action(session_id, action_id)
+
+    def get_session_deletion_snapshot(
+        self, session_id: str, *, exclude_action_id: str | None = None
+    ) -> dict:
+        with self.connection() as connection:
+            connection.execute("BEGIN")
+            return _session_deletion_snapshot(
+                connection, session_id, exclude_action_id=exclude_action_id
+            )
+
+    def get_session_deletion_counts(self, session_id: str) -> dict[str, int]:
+        with self.connection() as connection:
+            if connection.execute(
+                "SELECT 1 FROM agent_sessions WHERE session_id = ?", (session_id,)
+            ).fetchone() is None:
+                raise AgentCoreError("SESSION_NOT_FOUND", "Agent session was not found.", 404)
+            return _session_deletion_counts(connection, session_id)
+
+    def delete_session_atomically(
+        self,
+        session_id: str,
+        action_id: str,
+        *,
+        expected_state_version: int,
+    ) -> dict:
+        session_hash = _deletion_hash("session", session_id)
+        action_hash = _deletion_hash("action", action_id)
+        now = _now()
+        with self.connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            receipt = connection.execute(
+                "SELECT * FROM agent_session_deletions WHERE session_hash = ?",
+                (session_hash,),
+            ).fetchone()
+            if receipt is not None:
+                if receipt["action_hash"] != action_hash:
+                    raise AgentCoreError(
+                        "ACTION_NOT_ALLOWED", "Deletion action was not found.", 404
+                    )
+                connection.commit()
+                return {
+                    "deleted_at": receipt["deleted_at"],
+                    "counts": json.loads(receipt["counts_json"]),
+                }
+
+            session = connection.execute(
+                "SELECT * FROM agent_sessions WHERE session_id = ?",
+                (session_id,),
+            ).fetchone()
+            if session is None:
+                raise AgentCoreError("SESSION_NOT_FOUND", "Agent session was not found.", 404)
+            action = connection.execute(
+                """SELECT * FROM agent_pending_actions
+                   WHERE session_id = ? AND action_id = ? AND action_type = 'delete_session_v1'""",
+                (session_id, action_id),
+            ).fetchone()
+            if action is None:
+                raise AgentCoreError("ACTION_NOT_ALLOWED", "Deletion action was not found.", 404)
+            if _parse(action["expires_at"]) <= now or action["status"] != "awaiting_confirmation":
+                raise AgentCoreError("ACTION_STALE", "Deletion action is stale.", 409)
+            if (
+                action["expected_state_version"] != expected_state_version
+                or session["state_version"] != expected_state_version
+            ):
+                raise AgentCoreError("ACTION_STALE", "Agent state version is stale.", 409)
+            if _hash(action["payload_json"]) != action["payload_hash"]:
+                raise AgentCoreError("TOOL_RESULT_INVALID", "Action payload integrity failed.", 409)
+            payload = json.loads(action["payload_json"])
+            snapshot_hash = payload.get("snapshot_hash")
+            if not isinstance(snapshot_hash, str):
+                raise AgentCoreError("TOOL_RESULT_INVALID", "Deletion snapshot is invalid.", 409)
+            current_snapshot = _session_deletion_snapshot(
+                connection, session_id, exclude_action_id=action_id
+            )
+            if _hash(_json(current_snapshot)) != snapshot_hash:
+                raise AgentCoreError(
+                    "DELETE_STALE",
+                    "The session changed after deletion was prepared. Please review a new request.",
+                    409,
+                )
+
+            counts = _session_deletion_counts(connection, session_id)
+            tables = {
+                "messages": "agent_messages",
+                "business_state": "agent_business_state",
+                "confirmations": "agent_confirmations",
+                "pending_actions": "agent_pending_actions",
+                "resources": "agent_resources",
+                "audit_events": "agent_audit_events",
+            }
+            for name, table in tables.items():
+                deleted = connection.execute(
+                    f"DELETE FROM {table} WHERE session_id = ?", (session_id,)
+                )
+                if deleted.rowcount != counts[name]:
+                    raise AgentCoreError("AGENT_STORAGE_ERROR", "Session deletion did not complete.", 500)
+            deleted_session = connection.execute(
+                "DELETE FROM agent_sessions WHERE session_id = ?", (session_id,)
+            )
+            if deleted_session.rowcount != 1:
+                raise AgentCoreError("AGENT_STORAGE_ERROR", "Session deletion did not complete.", 500)
+            deleted_at = _iso(now)
+            connection.execute(
+                "INSERT INTO agent_session_deletions VALUES (?, ?, ?, ?)",
+                (session_hash, action_hash, deleted_at, _json(counts)),
+            )
+            connection.commit()
+        return {"deleted_at": deleted_at, "counts": counts}
 
     def finish_pending_action_with_audit(
         self,
@@ -903,3 +1121,72 @@ def _json(value: Any) -> str:
 
 def _hash(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _deletion_hash(kind: str, value: str) -> str:
+    return _hash(f"session-deletion-v1:{kind}:{value}")
+
+
+def _session_deletion_snapshot(
+    connection: sqlite3.Connection,
+    session_id: str,
+    *,
+    exclude_action_id: str | None = None,
+) -> dict[str, Any]:
+    session = connection.execute(
+        """SELECT status, created_at, expires_at, state_version
+           FROM agent_sessions WHERE session_id = ?""",
+        (session_id,),
+    ).fetchone()
+    if session is None:
+        raise AgentCoreError("SESSION_NOT_FOUND", "Agent session was not found.", 404)
+    queries = {
+        "messages": """SELECT message_id, role, content, metadata_json, created_at
+                       FROM agent_messages WHERE session_id=? ORDER BY message_id""",
+        "business_state": """SELECT state_json, version, updated_at
+                             FROM agent_business_state WHERE session_id=?""",
+        "confirmations": """SELECT confirmation_id, status, version, consumed_at,
+                                    result_resource_id, error_code
+                             FROM agent_confirmations WHERE session_id=? ORDER BY confirmation_id""",
+        "resources": """SELECT resource_id, resource_type, content_hash, size_bytes, expires_at
+                        FROM agent_resources WHERE session_id=? ORDER BY resource_id""",
+        "audit_events": """SELECT event_id, event_type, status, error_code, summary_json, created_at
+                           FROM agent_audit_events WHERE session_id=? ORDER BY event_id""",
+    }
+    pending_actions = connection.execute(
+        """SELECT action_id, action_type, status, payload_hash, expires_at, consumed_at
+           FROM agent_pending_actions
+           WHERE session_id = ? AND (? IS NULL OR action_id != ?)
+           ORDER BY action_id""",
+        (session_id, exclude_action_id, exclude_action_id),
+    ).fetchall()
+    return {
+        "session": dict(session),
+        "pending_actions": [dict(row) for row in pending_actions],
+        **{
+            name: [dict(row) for row in connection.execute(query, (session_id,)).fetchall()]
+            for name, query in queries.items()
+        },
+    }
+
+
+def _session_deletion_counts(
+    connection: sqlite3.Connection, session_id: str
+) -> dict[str, int]:
+    tables = {
+        "messages": "agent_messages",
+        "business_state": "agent_business_state",
+        "confirmations": "agent_confirmations",
+        "pending_actions": "agent_pending_actions",
+        "resources": "agent_resources",
+        "audit_events": "agent_audit_events",
+    }
+    return {
+        "sessions": 1,
+        **{
+            name: connection.execute(
+                f"SELECT COUNT(*) FROM {table} WHERE session_id = ?", (session_id,)
+            ).fetchone()[0]
+            for name, table in tables.items()
+        },
+    }

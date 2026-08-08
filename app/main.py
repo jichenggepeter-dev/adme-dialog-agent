@@ -42,6 +42,12 @@ def _error_response(status_code: int, code: str, message: str, details: str | No
     )
 
 
+def _deletion_response_headers(request: Request) -> dict[str, str]:
+    if request.url.path.startswith("/agent/sessions/") and "/deletions" in request.url.path:
+        return {"Cache-Control": "no-store, max-age=0"}
+    return {}
+
+
 @app.exception_handler(ADMETPredictionError)
 async def prediction_error_handler(request: Request, exc: ADMETPredictionError) -> JSONResponse:
     logger.exception("ADMET prediction request failed", exc_info=exc)
@@ -57,6 +63,7 @@ async def prediction_error_handler(request: Request, exc: ADMETPredictionError) 
 async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     return JSONResponse(
         status_code=422,
+        headers=_deletion_response_headers(request),
         content={
             "error": {
                 "code": "INVALID_REQUEST",
@@ -86,6 +93,7 @@ async def agent_core_error_handler(request: Request, exc: AgentCoreError) -> JSO
     logger.warning("Agent request failed: %s", exc.code)
     return JSONResponse(
         status_code=exc.status_code,
+        headers=_deletion_response_headers(request),
         content={"error": {"code": exc.code, "message": str(exc), "details": None,
                            "retryable": exc.retryable,
                            "correlation_id": request.headers.get("X-Correlation-ID") or uuid4().hex}},

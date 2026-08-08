@@ -8,6 +8,8 @@ import {
   predictionResourceSchema,
   resourceResponseSchema,
   sessionSchema,
+  sessionDeletionProposalSchema,
+  sessionDeletionResultSchema,
   sessionExportProposalSchema,
   sessionExportResultSchema,
 } from "./agent-schemas";
@@ -18,6 +20,8 @@ import type {
   AgentStreamResponseCompleted,
   Confirmation,
   PageContext,
+  SessionDeletionProposal,
+  SessionDeletionResult,
   SessionExportFormat,
   SessionExportProposal,
   SessionExportResult,
@@ -399,6 +403,20 @@ export const getAgentMessages = (id: string) =>
     10_000,
   );
 
+export const prepareSessionDeletion = (
+  sessionId: string,
+  stateVersion: number,
+): Promise<SessionDeletionProposal> =>
+  request(
+    `/agent/sessions/${encodeURIComponent(sessionId)}/deletions`,
+    sessionDeletionProposalSchema,
+    {
+      method: "POST",
+      body: JSON.stringify({ expected_state_version: stateVersion }),
+    },
+    15_000,
+  );
+
 export const prepareSessionExport = (
   sessionId: string,
   format: SessionExportFormat,
@@ -416,6 +434,22 @@ export const prepareSessionExport = (
       }),
     },
     15_000,
+  );
+
+export const decideSessionDeletion = (
+  sessionId: string,
+  actionId: string,
+  decision: "approve" | "reject",
+  stateVersion: number,
+): Promise<SessionDeletionResult> =>
+  request(
+    `/agent/sessions/${encodeURIComponent(sessionId)}/deletions/${encodeURIComponent(actionId)}`,
+    sessionDeletionResultSchema,
+    {
+      method: "POST",
+      body: JSON.stringify({ decision, expected_state_version: stateVersion }),
+    },
+    30_000,
   );
 
 export const decideSessionExport = (

@@ -324,6 +324,15 @@ class PendingActionRequest(StrictModel):
     expected_state_version: int = Field(ge=0)
 
 
+class SessionDeletionPrepareRequest(StrictModel):
+    expected_state_version: int = Field(ge=0)
+
+
+class SessionDeletionDecisionRequest(StrictModel):
+    decision: Literal["approve", "reject"]
+    expected_state_version: int = Field(ge=0)
+
+
 class SessionExportPrepareRequest(StrictModel):
     format: Literal["json", "markdown"] = "json"
     expected_state_version: int = Field(ge=0)
@@ -340,6 +349,18 @@ class SessionExportPrepareRequest(StrictModel):
 class SessionExportDecisionRequest(StrictModel):
     decision: Literal["approve", "reject"]
     expected_state_version: int = Field(ge=0)
+
+
+class SessionDeletionAction(StrictModel):
+    action_id: str
+    session_id: str
+    action_type: Literal["delete_session_v1"]
+    status: Literal["awaiting_confirmation"]
+    payload: dict[str, Any] = Field(default_factory=dict)
+    expected_state_version: int = Field(ge=0)
+    created_at: datetime
+    expires_at: datetime
+    consumed_at: datetime | None = None
 
 
 class SessionExportAction(StrictModel):
@@ -359,6 +380,38 @@ class SessionExportAction(StrictModel):
     created_at: datetime
     expires_at: datetime
     consumed_at: datetime | None = None
+
+
+class SessionDeletionCounts(StrictModel):
+    sessions: int = Field(ge=0)
+    messages: int = Field(ge=0)
+    business_state: int = Field(ge=0)
+    confirmations: int = Field(ge=0)
+    pending_actions: int = Field(ge=0)
+    resources: int = Field(ge=0)
+    audit_events: int = Field(ge=0)
+
+
+class SessionDeletionProposal(StrictModel):
+    action: SessionDeletionAction
+    counts: SessionDeletionCounts
+    deleted: list[str]
+    retained: list[str]
+
+
+class SessionDeletionResult(StrictModel):
+    status: Literal["deleted", "rejected"]
+    deleted_at: datetime | None = None
+    counts: SessionDeletionCounts | None = None
+    retained: list[str]
+
+    @model_validator(mode="after")
+    def require_receipt_only_for_deleted_session(self) -> SessionDeletionResult:
+        if self.status == "deleted" and (self.deleted_at is None or self.counts is None):
+            raise ValueError("Deleted sessions require a deletion receipt.")
+        if self.status == "rejected" and (self.deleted_at is not None or self.counts is not None):
+            raise ValueError("Rejected deletion cannot include a receipt.")
+        return self
 
 
 class SessionExportProposalCounts(StrictModel):
