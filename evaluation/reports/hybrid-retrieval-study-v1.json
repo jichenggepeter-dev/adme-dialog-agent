@@ -1,0 +1,669 @@
+{
+  "experiment": {
+    "corpus_sha256": "b3bf131163b079a014e4ec04bdc6ba4e90963ceed636cd5d8f68b1b2c52ea3d3",
+    "dataset_sha256": "2eba797c5bef848e71b815d215de4c28b75fa35fb29d0746c6eb560f5186f6c3",
+    "dense_minimum_score": 0.35,
+    "index_build_ms": 434.86,
+    "model": {
+      "cache_bytes": 91578367,
+      "id": "sentence-transformers/all-MiniLM-L6-v2",
+      "license": "Apache-2.0",
+      "revision": "826711e54e001c83835913827a843d8dd0a1def9"
+    },
+    "model_load_ms": 132.54,
+    "network_or_provider_required_after_cache": false,
+    "offline_mode": true,
+    "packages": {
+      "huggingface-hub": "1.27.0",
+      "numpy": "2.4.6",
+      "scikit-learn": "1.9.0",
+      "sentence-transformers": "5.6.1",
+      "tokenizers": "0.22.2",
+      "torch": "2.13.0",
+      "transformers": "5.14.1"
+    },
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "production_dependency_change": "none; research optional extra only",
+    "python_version": "3.11.15",
+    "query_count": 21,
+    "rrf_k": 60,
+    "schema_version": 1,
+    "top_k": 3
+  },
+  "methods": {
+    "dense": {
+      "latency": {
+        "median_ms": 5.1484,
+        "p95_ms": 7.0405,
+        "sample_count": 21
+      },
+      "quality": {
+        "by_category": {
+          "abbreviation": {
+            "mrr": 0.25,
+            "query_count": 4,
+            "recall_at_1": 0.25,
+            "recall_at_3": 0.25
+          },
+          "direct": {
+            "mrr": 0.875,
+            "query_count": 4,
+            "recall_at_1": 0.75,
+            "recall_at_3": 1.0
+          },
+          "hard_negative": {
+            "mrr": 0.0,
+            "query_count": 4,
+            "recall_at_1": 0.0,
+            "recall_at_3": 0.0
+          },
+          "metadata": {
+            "mrr": 0.75,
+            "query_count": 4,
+            "recall_at_1": 0.75,
+            "recall_at_3": 0.75
+          },
+          "paraphrase": {
+            "mrr": 1.0,
+            "query_count": 5,
+            "recall_at_1": 1.0,
+            "recall_at_3": 1.0
+          }
+        },
+        "hard_negative_accuracy": 0.75,
+        "overall": {
+          "mrr": 0.7352941176470589,
+          "query_count": 17,
+          "recall_at_1": 0.7058823529411765,
+          "recall_at_3": 0.7647058823529411
+        }
+      },
+      "quality_gate": {
+        "hard_negatives_preserved": false,
+        "mrr_improved": true,
+        "no_category_regression": false,
+        "passed": false,
+        "recall_at_3_improved": true
+      },
+      "rankings": {
+        "abbreviation-ddi": [],
+        "abbreviation-dili": [],
+        "abbreviation-food-effect": [
+          "fda-food-effect-2026",
+          "fda-mass-balance-2024",
+          "fda-metabolites-2016"
+        ],
+        "abbreviation-renal": [],
+        "direct-ddi": [
+          "fda-in-vitro-ddi-2020-withdrawn",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "direct-mass-balance": [
+          "fda-mass-balance-2024",
+          "fda-m12-2024"
+        ],
+        "direct-metabolites": [
+          "fda-metabolites-2016",
+          "fda-m12-2024",
+          "fda-mass-balance-2024"
+        ],
+        "direct-renal": [
+          "fda-renal-pk-2024",
+          "fda-m12-2024",
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "hard-negative-crispr": [],
+        "hard-negative-docking": [
+          "fda-m12-2024"
+        ],
+        "hard-negative-quantum": [],
+        "hard-negative-zebrafish": [],
+        "metadata-food-date": [
+          "fda-food-effect-2026",
+          "fda-in-vitro-ddi-2020-withdrawn",
+          "fda-m12-2024"
+        ],
+        "metadata-m12-date": [],
+        "metadata-metabolites-year": [
+          "fda-metabolites-2016",
+          "fda-m12-2024",
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "metadata-withdrawn": [
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "paraphrase-food": [
+          "fda-food-effect-2026"
+        ],
+        "paraphrase-liver": [
+          "fda-dili-2009",
+          "fda-metabolites-2016",
+          "fda-m12-2024"
+        ],
+        "paraphrase-mass-balance": [
+          "fda-mass-balance-2024"
+        ],
+        "paraphrase-metabolites": [
+          "fda-metabolites-2016"
+        ],
+        "paraphrase-renal": [
+          "fda-renal-pk-2024"
+        ]
+      },
+      "unexpected_hard_negative_matches": {
+        "hard-negative-docking": [
+          "fda-m12-2024"
+        ]
+      }
+    },
+    "hybrid_metadata_rrf": {
+      "latency": {
+        "median_ms": 4.5294,
+        "p95_ms": 5.064,
+        "sample_count": 21
+      },
+      "quality": {
+        "by_category": {
+          "abbreviation": {
+            "mrr": 0.25,
+            "query_count": 4,
+            "recall_at_1": 0.25,
+            "recall_at_3": 0.25
+          },
+          "direct": {
+            "mrr": 0.875,
+            "query_count": 4,
+            "recall_at_1": 0.75,
+            "recall_at_3": 1.0
+          },
+          "hard_negative": {
+            "mrr": 0.0,
+            "query_count": 4,
+            "recall_at_1": 0.0,
+            "recall_at_3": 0.0
+          },
+          "metadata": {
+            "mrr": 1.0,
+            "query_count": 4,
+            "recall_at_1": 1.0,
+            "recall_at_3": 1.0
+          },
+          "paraphrase": {
+            "mrr": 1.0,
+            "query_count": 5,
+            "recall_at_1": 1.0,
+            "recall_at_3": 1.0
+          }
+        },
+        "hard_negative_accuracy": 0.75,
+        "overall": {
+          "mrr": 0.7941176470588235,
+          "query_count": 17,
+          "recall_at_1": 0.7647058823529411,
+          "recall_at_3": 0.8235294117647058
+        }
+      },
+      "quality_gate": {
+        "hard_negatives_preserved": false,
+        "mrr_improved": true,
+        "no_category_regression": false,
+        "passed": false,
+        "recall_at_3_improved": true
+      },
+      "rankings": {
+        "abbreviation-ddi": [
+          "fda-mass-balance-2024"
+        ],
+        "abbreviation-dili": [],
+        "abbreviation-food-effect": [
+          "fda-food-effect-2026",
+          "fda-mass-balance-2024",
+          "fda-renal-pk-2024"
+        ],
+        "abbreviation-renal": [],
+        "direct-ddi": [
+          "fda-in-vitro-ddi-2020-withdrawn",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "direct-mass-balance": [
+          "fda-mass-balance-2024",
+          "fda-m12-2024",
+          "fda-renal-pk-2024"
+        ],
+        "direct-metabolites": [
+          "fda-metabolites-2016",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "direct-renal": [
+          "fda-renal-pk-2024",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "hard-negative-crispr": [],
+        "hard-negative-docking": [
+          "fda-m12-2024"
+        ],
+        "hard-negative-quantum": [],
+        "hard-negative-zebrafish": [],
+        "metadata-food-date": [
+          "fda-food-effect-2026",
+          "fda-in-vitro-ddi-2020-withdrawn",
+          "fda-m12-2024"
+        ],
+        "metadata-m12-date": [
+          "fda-m12-2024",
+          "fda-renal-pk-2024",
+          "fda-mass-balance-2024"
+        ],
+        "metadata-metabolites-year": [
+          "fda-metabolites-2016",
+          "fda-m12-2024",
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "metadata-withdrawn": [
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "paraphrase-food": [
+          "fda-food-effect-2026",
+          "fda-dili-2009",
+          "fda-metabolites-2016"
+        ],
+        "paraphrase-liver": [
+          "fda-dili-2009",
+          "fda-metabolites-2016",
+          "fda-m12-2024"
+        ],
+        "paraphrase-mass-balance": [
+          "fda-mass-balance-2024",
+          "fda-renal-pk-2024"
+        ],
+        "paraphrase-metabolites": [
+          "fda-metabolites-2016"
+        ],
+        "paraphrase-renal": [
+          "fda-renal-pk-2024"
+        ]
+      },
+      "unexpected_hard_negative_matches": {
+        "hard-negative-docking": [
+          "fda-m12-2024"
+        ]
+      }
+    },
+    "hybrid_rrf": {
+      "latency": {
+        "median_ms": 4.4692,
+        "p95_ms": 4.918,
+        "sample_count": 21
+      },
+      "quality": {
+        "by_category": {
+          "abbreviation": {
+            "mrr": 0.25,
+            "query_count": 4,
+            "recall_at_1": 0.25,
+            "recall_at_3": 0.25
+          },
+          "direct": {
+            "mrr": 1.0,
+            "query_count": 4,
+            "recall_at_1": 1.0,
+            "recall_at_3": 1.0
+          },
+          "hard_negative": {
+            "mrr": 0.0,
+            "query_count": 4,
+            "recall_at_1": 0.0,
+            "recall_at_3": 0.0
+          },
+          "metadata": {
+            "mrr": 0.75,
+            "query_count": 4,
+            "recall_at_1": 0.75,
+            "recall_at_3": 0.75
+          },
+          "paraphrase": {
+            "mrr": 1.0,
+            "query_count": 5,
+            "recall_at_1": 1.0,
+            "recall_at_3": 1.0
+          }
+        },
+        "hard_negative_accuracy": 0.75,
+        "overall": {
+          "mrr": 0.7647058823529411,
+          "query_count": 17,
+          "recall_at_1": 0.7647058823529411,
+          "recall_at_3": 0.7647058823529411
+        }
+      },
+      "quality_gate": {
+        "hard_negatives_preserved": false,
+        "mrr_improved": true,
+        "no_category_regression": true,
+        "passed": false,
+        "recall_at_3_improved": true
+      },
+      "rankings": {
+        "abbreviation-ddi": [],
+        "abbreviation-dili": [],
+        "abbreviation-food-effect": [
+          "fda-food-effect-2026",
+          "fda-mass-balance-2024",
+          "fda-renal-pk-2024"
+        ],
+        "abbreviation-renal": [],
+        "direct-ddi": [
+          "fda-m12-2024",
+          "fda-in-vitro-ddi-2020-withdrawn",
+          "fda-food-effect-2026"
+        ],
+        "direct-mass-balance": [
+          "fda-mass-balance-2024",
+          "fda-m12-2024",
+          "fda-renal-pk-2024"
+        ],
+        "direct-metabolites": [
+          "fda-metabolites-2016",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "direct-renal": [
+          "fda-renal-pk-2024",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "hard-negative-crispr": [],
+        "hard-negative-docking": [
+          "fda-m12-2024"
+        ],
+        "hard-negative-quantum": [],
+        "hard-negative-zebrafish": [],
+        "metadata-food-date": [
+          "fda-food-effect-2026",
+          "fda-in-vitro-ddi-2020-withdrawn",
+          "fda-m12-2024"
+        ],
+        "metadata-m12-date": [],
+        "metadata-metabolites-year": [
+          "fda-metabolites-2016",
+          "fda-m12-2024",
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "metadata-withdrawn": [
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "paraphrase-food": [
+          "fda-food-effect-2026",
+          "fda-dili-2009",
+          "fda-metabolites-2016"
+        ],
+        "paraphrase-liver": [
+          "fda-dili-2009",
+          "fda-metabolites-2016",
+          "fda-m12-2024"
+        ],
+        "paraphrase-mass-balance": [
+          "fda-mass-balance-2024",
+          "fda-renal-pk-2024"
+        ],
+        "paraphrase-metabolites": [
+          "fda-metabolites-2016"
+        ],
+        "paraphrase-renal": [
+          "fda-renal-pk-2024"
+        ]
+      },
+      "unexpected_hard_negative_matches": {
+        "hard-negative-docking": [
+          "fda-m12-2024"
+        ]
+      }
+    },
+    "lexical": {
+      "latency": {
+        "median_ms": 0.0275,
+        "p95_ms": 0.0763,
+        "sample_count": 21
+      },
+      "quality": {
+        "by_category": {
+          "abbreviation": {
+            "mrr": 0.25,
+            "query_count": 4,
+            "recall_at_1": 0.25,
+            "recall_at_3": 0.25
+          },
+          "direct": {
+            "mrr": 1.0,
+            "query_count": 4,
+            "recall_at_1": 1.0,
+            "recall_at_3": 1.0
+          },
+          "hard_negative": {
+            "mrr": 0.0,
+            "query_count": 4,
+            "recall_at_1": 0.0,
+            "recall_at_3": 0.0
+          },
+          "metadata": {
+            "mrr": 0.5,
+            "query_count": 4,
+            "recall_at_1": 0.5,
+            "recall_at_3": 0.5
+          },
+          "paraphrase": {
+            "mrr": 0.9,
+            "query_count": 5,
+            "recall_at_1": 0.8,
+            "recall_at_3": 1.0
+          }
+        },
+        "hard_negative_accuracy": 1.0,
+        "overall": {
+          "mrr": 0.6764705882352942,
+          "query_count": 17,
+          "recall_at_1": 0.6470588235294118,
+          "recall_at_3": 0.7058823529411765
+        }
+      },
+      "quality_gate": {
+        "hard_negatives_preserved": true,
+        "mrr_improved": false,
+        "no_category_regression": true,
+        "passed": false,
+        "recall_at_3_improved": false
+      },
+      "rankings": {
+        "abbreviation-ddi": [],
+        "abbreviation-dili": [],
+        "abbreviation-food-effect": [
+          "fda-food-effect-2026",
+          "fda-renal-pk-2024"
+        ],
+        "abbreviation-renal": [],
+        "direct-ddi": [
+          "fda-m12-2024"
+        ],
+        "direct-mass-balance": [
+          "fda-mass-balance-2024",
+          "fda-renal-pk-2024"
+        ],
+        "direct-metabolites": [
+          "fda-metabolites-2016",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "direct-renal": [
+          "fda-renal-pk-2024",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "hard-negative-crispr": [],
+        "hard-negative-docking": [],
+        "hard-negative-quantum": [],
+        "hard-negative-zebrafish": [],
+        "metadata-food-date": [
+          "fda-food-effect-2026"
+        ],
+        "metadata-m12-date": [],
+        "metadata-metabolites-year": [],
+        "metadata-withdrawn": [
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "paraphrase-food": [
+          "fda-dili-2009",
+          "fda-food-effect-2026",
+          "fda-metabolites-2016"
+        ],
+        "paraphrase-liver": [
+          "fda-dili-2009"
+        ],
+        "paraphrase-mass-balance": [
+          "fda-mass-balance-2024",
+          "fda-renal-pk-2024"
+        ],
+        "paraphrase-metabolites": [
+          "fda-metabolites-2016"
+        ],
+        "paraphrase-renal": [
+          "fda-renal-pk-2024"
+        ]
+      },
+      "unexpected_hard_negative_matches": {}
+    },
+    "metadata_lexical": {
+      "latency": {
+        "median_ms": 0.0574,
+        "p95_ms": 0.0781,
+        "sample_count": 21
+      },
+      "quality": {
+        "by_category": {
+          "abbreviation": {
+            "mrr": 0.25,
+            "query_count": 4,
+            "recall_at_1": 0.25,
+            "recall_at_3": 0.25
+          },
+          "direct": {
+            "mrr": 0.875,
+            "query_count": 4,
+            "recall_at_1": 0.75,
+            "recall_at_3": 1.0
+          },
+          "hard_negative": {
+            "mrr": 0.0,
+            "query_count": 4,
+            "recall_at_1": 0.0,
+            "recall_at_3": 0.0
+          },
+          "metadata": {
+            "mrr": 1.0,
+            "query_count": 4,
+            "recall_at_1": 1.0,
+            "recall_at_3": 1.0
+          },
+          "paraphrase": {
+            "mrr": 0.9,
+            "query_count": 5,
+            "recall_at_1": 0.8,
+            "recall_at_3": 1.0
+          }
+        },
+        "hard_negative_accuracy": 1.0,
+        "overall": {
+          "mrr": 0.7647058823529411,
+          "query_count": 17,
+          "recall_at_1": 0.7058823529411765,
+          "recall_at_3": 0.8235294117647058
+        }
+      },
+      "quality_gate": {
+        "hard_negatives_preserved": true,
+        "mrr_improved": true,
+        "no_category_regression": false,
+        "passed": false,
+        "recall_at_3_improved": true
+      },
+      "rankings": {
+        "abbreviation-ddi": [
+          "fda-mass-balance-2024"
+        ],
+        "abbreviation-dili": [],
+        "abbreviation-food-effect": [
+          "fda-food-effect-2026",
+          "fda-renal-pk-2024",
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "abbreviation-renal": [],
+        "direct-ddi": [
+          "fda-in-vitro-ddi-2020-withdrawn",
+          "fda-m12-2024",
+          "fda-mass-balance-2024"
+        ],
+        "direct-mass-balance": [
+          "fda-mass-balance-2024",
+          "fda-renal-pk-2024"
+        ],
+        "direct-metabolites": [
+          "fda-metabolites-2016",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "direct-renal": [
+          "fda-renal-pk-2024",
+          "fda-m12-2024",
+          "fda-food-effect-2026"
+        ],
+        "hard-negative-crispr": [],
+        "hard-negative-docking": [],
+        "hard-negative-quantum": [],
+        "hard-negative-zebrafish": [],
+        "metadata-food-date": [
+          "fda-food-effect-2026"
+        ],
+        "metadata-m12-date": [
+          "fda-m12-2024",
+          "fda-renal-pk-2024",
+          "fda-mass-balance-2024"
+        ],
+        "metadata-metabolites-year": [
+          "fda-metabolites-2016"
+        ],
+        "metadata-withdrawn": [
+          "fda-in-vitro-ddi-2020-withdrawn"
+        ],
+        "paraphrase-food": [
+          "fda-dili-2009",
+          "fda-food-effect-2026",
+          "fda-metabolites-2016"
+        ],
+        "paraphrase-liver": [
+          "fda-dili-2009"
+        ],
+        "paraphrase-mass-balance": [
+          "fda-mass-balance-2024",
+          "fda-renal-pk-2024"
+        ],
+        "paraphrase-metabolites": [
+          "fda-metabolites-2016"
+        ],
+        "paraphrase-renal": [
+          "fda-renal-pk-2024"
+        ]
+      },
+      "unexpected_hard_negative_matches": {}
+    }
+  },
+  "repeatable_rankings": {
+    "dense": true,
+    "hybrid_metadata_rrf": true,
+    "hybrid_rrf": true,
+    "lexical": true,
+    "metadata_lexical": true
+  }
+}

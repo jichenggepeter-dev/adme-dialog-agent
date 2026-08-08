@@ -87,3 +87,7 @@ their current values. The experiment must separately disclose warm-query
 latency, cold start, index size, model and package licenses, dependency changes,
 offline behavior, migration needs, and deletion behavior. A small score increase
 does not automatically justify a new database or model runtime.
+
+The completed [hybrid retrieval study](hybrid-retrieval-study.md) applies this
+gate. It finds a promising metadata-only direction but does not approve a dense
+or hybrid method for production.

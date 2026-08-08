@@ -33,6 +33,7 @@ remain the executable source of truth when a document is accidentally stale.
 - [Computational summary rules](computational-summary-rules.md)
 - [ADME evidence RAG](evidence-rag.md)
 - [Evidence retrieval baseline and hybrid-search gate](rag/retrieval-baseline.md)
+- [Hybrid retrieval study and decision](rag/hybrid-retrieval-study.md)
 - [User-managed document collections and data lifecycle](rag/user-document-lifecycle.md)
 - [Keyless PR Review App](review-app.md)
 - [Accessibility testing](accessibility-testing.md)
