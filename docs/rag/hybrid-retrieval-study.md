@@ -30,6 +30,11 @@ research implementation as finished production behavior.
 No application code, API, database schema, or default dependency changes as a
 result of this study.
 
+The later production follow-up is tracked separately in Issue
+[#62](https://github.com/jichenggepeter-dev/adme-dialog-agent/issues/62). It
+adopts only the metadata-aware lexical candidate and leaves the rejected dense,
+hybrid, and vector-storage options out of the application.
+
 ## Fixed experiment
 
 The study used the versioned 21-query benchmark created in Issue #58 and the

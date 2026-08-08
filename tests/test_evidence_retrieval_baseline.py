@@ -45,6 +45,8 @@ def test_retrieval_quality_is_repeatable_and_keeps_contract_regressions() -> Non
         for category, metrics in first["quality"]["by_category"].items()
         if category != "hard_negative"
     )
+    assert first["quality"]["overall"]["recall_at_3"] >= 0.80
+    assert first["quality"]["overall"]["mrr"] >= 0.75
     assert first["quality"]["hard_negative_accuracy"] == 1.0
     assert evaluate_contract() == {
         "question_count": 13,

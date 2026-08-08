@@ -116,7 +116,7 @@ def evaluate(
             "python_version": platform.python_version(),
             "retrieval_config": {
                 "implementation": "app.services.evidence.EvidenceService.search",
-                "method": "deterministic lexical BM25-style scoring",
+                "method": "deterministic metadata-aware lexical BM25-style scoring",
                 "top_k": top_k,
                 "minimum_score": 0.2,
                 "minimum_query_token_overlap": "min(2, unique query tokens)",

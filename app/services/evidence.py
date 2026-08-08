@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import calendar
+from collections import Counter
 from copy import deepcopy
 import json
 import math
@@ -51,10 +53,32 @@ SEARCH_STOP_WORDS = {
     "when",
     "with",
 }
+STALE_QUERY_TERMS = ("withdrawn", "superseded", "obsolete")
 
 
 def tokenize(text: str) -> list[str]:
     return TOKEN_RE.findall(text.lower())
+
+
+def metadata_text(document: dict[str, Any]) -> str:
+    date = document["document_date"]
+    parts = date.split("-")
+    month = calendar.month_name[int(parts[1])] if len(parts) > 1 else ""
+    return " ".join([date, parts[0], month, document["version"], document["status"]])
+
+
+def lifecycle_match(query: str, document: dict[str, Any]) -> bool:
+    wants_stale = any(term in query.lower() for term in STALE_QUERY_TERMS)
+    return (document["status"] != "current") == wants_stale
+
+
+def enrich_with_metadata(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    enriched = []
+    for document in documents:
+        counts = Counter(document["tokens"])
+        counts.update(tokenize(metadata_text(document)))
+        enriched.append({**document, "tokens": dict(counts), "length": sum(counts.values())})
+    return enriched
 
 
 class EvidenceService:
@@ -63,9 +87,11 @@ class EvidenceService:
         index_path: Path = DEFAULT_INDEX,
         *,
         index_data: dict[str, Any] | None = None,
+        metadata_ranking: bool = True,
     ) -> None:
         self.index_path = index_path
         self.index_data = deepcopy(index_data) if index_data is not None else None
+        self.metadata_ranking = metadata_ranking
 
     def search(self, query: str, top_k: int = 3) -> dict[str, Any]:
         normalized = " ".join(query.split())
@@ -92,11 +118,13 @@ class EvidenceService:
         query_tokens = [token for token in tokenize(normalized) if token not in SEARCH_STOP_WORDS]
         if not query_tokens:
             return self._empty(normalized, "no_evidence", "No searchable evidence terms were provided.")
-        ranked = self._rank(query_tokens, documents)
+        ranking_documents = enrich_with_metadata(documents) if self.metadata_ranking else documents
+        ranked = self._rank(query_tokens, ranking_documents)
         matches = [
             item
             for item in ranked
-            if item[0] >= 0.2
+            if lifecycle_match(normalized, item[1])
+            and item[0] >= 0.2
             and len(set(query_tokens) & set(item[1]["tokens"])) >= min(2, len(set(query_tokens)))
         ][: max(1, min(top_k, 5))]
         if not matches:
@@ -106,7 +134,7 @@ class EvidenceService:
                 "No adequate passage was found in the approved local evidence corpus.",
             )
 
-        stale_request = any(term in query_tokens for term in ("withdrawn", "superseded", "obsolete"))
+        stale_request = any(term in query_tokens for term in STALE_QUERY_TERMS)
         if stale_request:
             stale = [item for item in matches if item[1]["status"] != "current"]
             if stale:
@@ -177,7 +205,18 @@ class EvidenceService:
             index = json.loads(self.index_path.read_text(encoding="utf-8"))
         if index.get("schema_version") != 1 or not isinstance(index.get("documents"), list):
             raise ValueError("Invalid evidence index.")
-        required = {"chunk_id", "source_id", "title", "url", "status", "tokens", "excerpt", "claim"}
+        required = {
+            "chunk_id",
+            "source_id",
+            "title",
+            "url",
+            "document_date",
+            "version",
+            "status",
+            "tokens",
+            "excerpt",
+            "claim",
+        }
         if any(not required.issubset(document) for document in index["documents"]):
             raise ValueError("Invalid evidence document.")
         return index

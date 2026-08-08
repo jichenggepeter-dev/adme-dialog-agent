@@ -63,7 +63,10 @@ on the evidence index.
 ## Known limits
 
 - The corpus is intentionally small and English-only.
-- Retrieval is deterministic lexical BM25-style scoring, not semantic search.
+- Retrieval is deterministic metadata-aware lexical BM25-style scoring, not
+  semantic search. Existing date, version, and lifecycle fields participate in
+  ranking; ordinary queries remain limited to current sources, while explicit
+  withdrawn or superseded queries may retrieve historical records.
 - It does not ingest arbitrary PDFs, crawl websites, or use embeddings.
 - Source links and lifecycle status require periodic human review.
 - Retrieval relevance is not proof that a scientific claim is universally

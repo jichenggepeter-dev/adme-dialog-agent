@@ -4,11 +4,11 @@
     "dataset_id": "evidence-retrieval-v1",
     "network_access": false,
     "new_runtime_dependencies": [],
-    "python_version": "3.11.14",
+    "python_version": "3.11.15",
     "query_count": 21,
     "retrieval_config": {
       "implementation": "app.services.evidence.EvidenceService.search",
-      "method": "deterministic lexical BM25-style scoring",
+      "method": "deterministic metadata-aware lexical BM25-style scoring",
       "minimum_query_token_overlap": "min(2, unique query tokens)",
       "minimum_score": 0.2,
       "top_k": 3
@@ -16,8 +16,8 @@
     "schema_version": 1
   },
   "latency": {
-    "median_ms": 0.0367,
-    "p95_ms": 0.0717,
+    "median_ms": 1.2,
+    "p95_ms": 1.3753,
     "sample_count": 21,
     "scope": "Local comparative measurement only; not a production latency claim."
   },
@@ -42,10 +42,10 @@
         "recall_at_3": 0.0
       },
       "metadata": {
-        "mrr": 0.5,
+        "mrr": 1.0,
         "query_count": 4,
-        "recall_at_1": 0.5,
-        "recall_at_3": 0.5
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0
       },
       "paraphrase": {
         "mrr": 0.9,
@@ -56,10 +56,10 @@
     },
     "hard_negative_accuracy": 1.0,
     "overall": {
-      "mrr": 0.6764705882352942,
+      "mrr": 0.7941176470588235,
       "query_count": 17,
-      "recall_at_1": 0.6470588235294118,
-      "recall_at_3": 0.7058823529411765
+      "recall_at_1": 0.7647058823529411,
+      "recall_at_3": 0.8235294117647058
     }
   },
   "rankings": [
@@ -77,7 +77,8 @@
       "query": "What FDA guidance covers enzyme and transporter mediated drug interactions?",
       "result_status": "supported",
       "retrieved_source_ids": [
-        "fda-m12-2024"
+        "fda-m12-2024",
+        "fda-mass-balance-2024"
       ]
     },
     {
@@ -168,8 +169,7 @@
       "result_status": "supported",
       "retrieved_source_ids": [
         "fda-dili-2009",
-        "fda-food-effect-2026",
-        "fda-metabolites-2016"
+        "fda-food-effect-2026"
       ]
     },
     {
@@ -236,8 +236,10 @@
         "reciprocal_rank": 0.0
       },
       "query": "Which current material covers DDI work?",
-      "result_status": "no_evidence",
-      "retrieved_source_ids": []
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-mass-balance-2024"
+      ]
     },
     {
       "category": "abbreviation",
@@ -294,13 +296,16 @@
       ],
       "id": "metadata-m12-date",
       "quality": {
-        "recall_at_1": 0.0,
-        "recall_at_3": 0.0,
-        "reciprocal_rank": 0.0
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
       },
       "query": "Which current August 2024 source discusses transporters?",
-      "result_status": "no_evidence",
-      "retrieved_source_ids": []
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-m12-2024",
+        "fda-renal-pk-2024"
+      ]
     },
     {
       "category": "metadata",
@@ -309,13 +314,15 @@
       ],
       "id": "metadata-metabolites-year",
       "quality": {
-        "recall_at_1": 0.0,
-        "recall_at_3": 0.0,
-        "reciprocal_rank": 0.0
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
       },
       "query": "Which 2016 final guidance concerns toxic metabolites?",
-      "result_status": "no_evidence",
-      "retrieved_source_ids": []
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-metabolites-2016"
+      ]
     },
     {
       "category": "metadata",
