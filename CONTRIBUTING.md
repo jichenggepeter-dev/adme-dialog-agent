@@ -47,6 +47,11 @@ a clean clone rather than depending on a contributor's machine.
 
 ## Development setup
 
+Start with the [15-minute contributor Quick Start](docs/contributor-quick-start.md)
+if this is your first change. It demonstrates all four product workflows and
+explains the scientific-evidence boundary before asking you to read the wider
+architecture.
+
 For the cleanest first run, use the pinned Docker Compose environment:
 
 ```bash

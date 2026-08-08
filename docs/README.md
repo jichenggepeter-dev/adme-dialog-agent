@@ -5,6 +5,8 @@ records. Start here instead of guessing from a filename.
 
 ## Contributor start here
 
+- [15-minute contributor Quick Start](contributor-quick-start.md): no-key Single, Batch, Assistant, and evidence examples
+- [External onboarding validation form](onboarding-validation.md): honest completion evidence for Issue #20
 - [Repository README](../README.md): product overview and first local run
 - [Contributing guide](../CONTRIBUTING.md): contribution rules and pull-request checks
 - [Testing guide](testing-guide.md): Mock Mode, real-model checks, and test layers

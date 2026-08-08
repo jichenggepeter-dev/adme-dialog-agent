@@ -6,11 +6,11 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
     environment:
-      ADME_MOCK_MODE: "true"
+      ADME_MOCK_MODE: "${ADME_MOCK_MODE:-true}"
       ADME_DATA_DIR: /workspace/data
       AGENT_DB_PATH: /workspace/data/agent.sqlite3
-      AGENT_ENABLED: "false"
-      AGENT_PROVIDER_MODE: live
+      AGENT_ENABLED: "${AGENT_ENABLED:-false}"
+      AGENT_PROVIDER_MODE: "${AGENT_PROVIDER_MODE:-live}"
       OPENAI_AGENTS_DISABLE_TRACING: "1"
     ports:
       - "127.0.0.1:8000:8000"
@@ -45,6 +45,8 @@ services:
       dockerfile: docker/frontend.Dockerfile
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
+      NEXT_PUBLIC_AGENT_PROVIDER_MODE: "${NEXT_PUBLIC_AGENT_PROVIDER_MODE:-live}"
+      NEXT_PUBLIC_REVIEW_MODE: "${NEXT_PUBLIC_REVIEW_MODE:-false}"
       NEXT_TELEMETRY_DISABLED: "1"
     ports:
       - "127.0.0.1:3000:3000"
