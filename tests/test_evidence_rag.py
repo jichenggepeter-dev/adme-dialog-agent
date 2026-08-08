@@ -60,6 +60,20 @@ def test_missing_corrupt_prohibited_partial_and_stale_states(tmp_path: Path) -> 
     assert all(item["status"] == "superseded" for item in stale["evidence"])
 
 
+def test_source_lifecycle_is_applied_before_ranking_cutoff() -> None:
+    current = EvidenceService().search(
+        "What FDA guidance covers enzyme and transporter mediated drug interactions?",
+        top_k=1,
+    )
+    historical = EvidenceService().search(
+        "Which superseded 2020 record covers CYP450 interactions?",
+        top_k=1,
+    )
+
+    assert current["evidence"][0]["source_id"] == "fda-m12-2024"
+    assert historical["evidence"][0]["source_id"] == "fda-in-vitro-ddi-2020-withdrawn"
+
+
 def test_agent_tool_emits_strict_evidence_payload(tmp_path: Path) -> None:
     repository = AgentRepository(tmp_path / "agent.sqlite3")
     session = repository.create_session()

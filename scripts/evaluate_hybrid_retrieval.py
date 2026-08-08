@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import argparse
-import calendar
-from collections import Counter, defaultdict
+from collections import defaultdict
 import hashlib
 from importlib.metadata import version
 import json
@@ -18,13 +17,18 @@ from typing import Any, Callable
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.services.evidence import EvidenceService, SEARCH_STOP_WORDS, tokenize
+from app.services.evidence import (
+    EvidenceService,
+    SEARCH_STOP_WORDS,
+    enrich_with_metadata,
+    lifecycle_match,
+    tokenize,
+)
 from scripts.evaluate_evidence_retrieval import (
     DEFAULT_CASES,
     DEFAULT_INDEX,
     _case_quality,
     _quality_summary,
-    evaluate as evaluate_lexical,
 )
 
 
@@ -33,23 +37,8 @@ MODEL_REVISION = "826711e54e001c83835913827a843d8dd0a1def9"
 MODEL_LICENSE = "Apache-2.0"
 DENSE_MINIMUM_SCORE = 0.35
 RRF_K = 60
-STALE_QUERY_TERMS = ("withdrawn", "superseded", "obsolete")
 DEFAULT_JSON_REPORT = ROOT / "evaluation" / "reports" / "hybrid-retrieval-study-v1.json"
 DEFAULT_MARKDOWN_REPORT = ROOT / "evaluation" / "reports" / "hybrid-retrieval-study-v1.md"
-
-
-def _metadata_text(document: dict[str, Any]) -> str:
-    date = document["document_date"]
-    parts = date.split("-")
-    month = calendar.month_name[int(parts[1])] if len(parts) > 1 else ""
-    return " ".join(
-        [date, parts[0], month, document["version"], document["status"]]
-    )
-
-
-def _lifecycle_match(query: str, document: dict[str, Any]) -> bool:
-    wants_stale = any(term in query.lower() for term in STALE_QUERY_TERMS)
-    return (document["status"] != "current") == wants_stale
 
 
 def rank_metadata_lexical(
@@ -61,17 +50,11 @@ def rank_metadata_lexical(
     if not query_tokens:
         return []
 
-    enriched = []
-    for document in documents:
-        counts = Counter(document["tokens"])
-        counts.update(tokenize(_metadata_text(document)))
-        enriched.append({**document, "tokens": dict(counts), "length": sum(counts.values())})
-
-    ranked = EvidenceService._rank(query_tokens, enriched)
+    ranked = EvidenceService._rank(query_tokens, enrich_with_metadata(documents))
     required_overlap = min(2, len(set(query_tokens)))
     sources = []
     for score, document in ranked:
-        if not _lifecycle_match(query, document):
+        if not lifecycle_match(query, document):
             continue
         overlap = len(set(query_tokens) & set(document["tokens"]))
         source_id = document["source_id"]
@@ -133,7 +116,7 @@ def _dense_ranker(
         )
         sources = []
         for score, document in ordered:
-            if not _lifecycle_match(query, document):
+            if not lifecycle_match(query, document):
                 continue
             source_id = document["source_id"]
             if score >= DENSE_MINIMUM_SCORE and source_id not in sources:
@@ -223,7 +206,7 @@ def evaluate(*, offline: bool) -> dict[str, Any]:
     )
     index_build_ms = (time.perf_counter_ns() - index_started) / 1_000_000
 
-    service = EvidenceService(index_data=index)
+    service = EvidenceService(index_data=index, metadata_ranking=False)
     dense = _dense_ranker(model, documents, document_embeddings, top_k=top_k)
     lexical = lambda query: _current_lexical(query, service, top_k)
     metadata = lambda query: rank_metadata_lexical(query, documents, top_k)
@@ -252,7 +235,7 @@ def evaluate(*, offline: bool) -> dict[str, Any]:
             "hybrid_metadata_rrf": hybrid_metadata,
         }.items()
     }
-    baseline = evaluate_lexical(measure_latency=False)["quality"]
+    baseline = methods["lexical"]["quality"]
     for method in methods.values():
         quality = method["quality"]
         no_slice_regression = all(

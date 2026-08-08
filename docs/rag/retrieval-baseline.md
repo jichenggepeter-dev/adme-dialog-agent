@@ -54,6 +54,15 @@ hard negatives abstain. Abbreviation and metadata questions expose the largest
 gaps. These values are descriptive results for the tiny fixed corpus, not
 general search-quality claims.
 
+## Production follow-up
+
+Issue [#62](https://github.com/jichenggepeter-dev/adme-dialog-agent/issues/62)
+promoted the validated metadata-aware candidate into the local evidence
+retriever. On the same versioned cases, production retrieval now reaches
+Recall@3 `0.824`, MRR `0.794`, and hard-negative accuracy `1.000`. The change
+uses only the date, version, and lifecycle fields already stored in the index;
+it adds no model, vector database, network request, or runtime dependency.
+
 ## Candidates for Issue #26
 
 | Candidate | Value to test | Cost or risk to measure |
