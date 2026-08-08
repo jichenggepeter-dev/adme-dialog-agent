@@ -30,3 +30,17 @@ Local audit events may record correlation ID, model, tool name, duration, stable
 They do not record API keys, Authorization headers, full prompts, raw provider responses, full tool payloads, arbitrary file content, or complete batch data. SMILES, queries, and messages in audit summaries are hashed rather than stored verbatim.
 
 Conversation messages are intentionally stored as product history and are separate from operational audit logs.
+
+## User-facing Activity Trace
+
+The Assistant activity trace is also separate from operational audit logs. It
+is created in memory from an exact frontend allowlist and is bounded to 40
+entries per assistant message. It may contain an opaque correlation ID,
+allowlisted tool name, stable status or error code, UTC event time, monotonic
+duration, and an already-approved evidence source title and HTTP(S) URL.
+
+It does not expose the SQLite audit table, chain of thought, full prompts, user
+messages, tool arguments, confirmation payloads, raw provider responses,
+resource contents, Batch rows, API keys, Authorization headers, or tracebacks.
+The trace has no control that can run a tool or bypass confirmation. Its error
+recovery control only focuses the existing message box.

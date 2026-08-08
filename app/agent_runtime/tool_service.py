@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 import hashlib
 import json
+import time
 from typing import Any
 from uuid import uuid4
 
@@ -613,25 +615,49 @@ class AgentToolService:
         return self.repository.get_resource(self.context.session_id, resource_id)
 
     def _execute(self, tool_name: str, operation, arguments: dict[str, Any]) -> dict:
+        started_at = datetime.now(UTC)
+        started = time.monotonic()
         if self.context.blocked:
-            return self._envelope(tool_name, "error", error_code="AGENT_TOOL_LIMIT", message="Agent tool execution is blocked for this turn.")
+            return self._record_error(
+                tool_name,
+                "AGENT_TOOL_LIMIT",
+                "Agent tool execution is blocked for this turn.",
+                started_at,
+                started,
+            )
         fingerprint = hashlib.sha256(
             json.dumps([tool_name, arguments], sort_keys=True, default=str).encode()
         ).hexdigest()
         if self.context.call_fingerprints.count(fingerprint) >= MAX_IDENTICAL_TOOL_CALLS:
             self.context.blocked = True
-            return self._record_error(tool_name, "AGENT_TOOL_LOOP", "Repeated tool-call loop detected.")
+            return self._record_error(
+                tool_name,
+                "AGENT_TOOL_LOOP",
+                "Repeated tool-call loop detected.",
+                started_at,
+                started,
+            )
         if len(self.context.call_fingerprints) >= MAX_TOOL_CALLS:
             self.context.blocked = True
             return self._record_error(
-                tool_name, "AGENT_TOOL_LIMIT", "Agent tool-call limit reached."
+                tool_name,
+                "AGENT_TOOL_LIMIT",
+                "Agent tool-call limit reached.",
+                started_at,
+                started,
             )
         self.context.call_fingerprints.append(fingerprint)
         if len(self.context.call_fingerprints) >= 6:
             recent = self.context.call_fingerprints[-6:]
             if recent[0] == recent[2] == recent[4] and recent[1] == recent[3] == recent[5]:
                 self.context.blocked = True
-                return self._record_error(tool_name, "AGENT_TOOL_LOOP", "Alternating tool-call loop detected.")
+                return self._record_error(
+                    tool_name,
+                    "AGENT_TOOL_LOOP",
+                    "Alternating tool-call loop detected.",
+                    started_at,
+                    started,
+                )
         try:
             result = operation()
         except (
@@ -646,30 +672,51 @@ class AgentToolService:
                 tool_name,
                 getattr(exc, "code", "TOOL_FAILED"),
                 str(exc),
+                started_at,
+                started,
             )
         try:
             validated = ToolResultEnvelope.model_validate(result).model_dump(mode="json")
         except ValidationError:
             return self._record_error(
-                tool_name, "TOOL_RESULT_INVALID", "Tool result failed schema validation."
+                tool_name,
+                "TOOL_RESULT_INVALID",
+                "Tool result failed schema validation.",
+                started_at,
+                started,
             )
+        completed_at = datetime.now(UTC)
         self.context.tool_activity.append(
             {
                 "tool_name": tool_name,
                 "status": "completed",
                 "resource_id": validated.get("resource_id"),
                 "error_code": None,
+                "started_at": started_at.isoformat(),
+                "completed_at": completed_at.isoformat(),
+                "duration_ms": max(0, int((time.monotonic() - started) * 1000)),
             }
         )
         return validated
 
-    def _record_error(self, tool_name: str, code: str, message: str) -> dict:
+    def _record_error(
+        self,
+        tool_name: str,
+        code: str,
+        message: str,
+        started_at: datetime,
+        started: float,
+    ) -> dict:
+        completed_at = datetime.now(UTC)
         self.context.tool_activity.append(
             {
                 "tool_name": tool_name,
                 "status": "error",
                 "resource_id": None,
                 "error_code": code,
+                "started_at": started_at.isoformat(),
+                "completed_at": completed_at.isoformat(),
+                "duration_ms": max(0, int((time.monotonic() - started) * 1000)),
             }
         )
         return self._envelope(

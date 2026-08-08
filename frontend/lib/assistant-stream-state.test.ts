@@ -11,6 +11,7 @@ describe("streamed assistant message state", () => {
     messages = applyStreamEvent(messages, { ...base, type: "message_delta", sequence: 2, delta: "world" });
     expect(messages).toHaveLength(1);
     expect(messages[0]).toMatchObject({ message_id: "msg_1", content: "Hello world" });
+    expect(messages[0].activity).toEqual([expect.objectContaining({ kind: "request" })]);
 
     const response: AgentResponse = { message_id: "msg_1", text: "Hello world", structured_payloads: [{ type: "none", data: {} }], pending_confirmation: null, pending_action: null, tool_activity: [], ui_action_proposals: [], warnings: [], state_version: 2 };
     messages = finalizeStreamedMessage(messages, "session_1", response);
@@ -24,5 +25,15 @@ describe("streamed assistant message state", () => {
     const messages = applyStreamEvent([], event);
     expect(messages).toHaveLength(1);
     expect(messages[0].tools).toEqual([event.tool_activity]);
+  });
+
+  it("does not replace a streamed message from another session", () => {
+    const messages = applyStreamEvent([], { ...base, type: "heartbeat", sequence: 0 });
+    const response: AgentResponse = { message_id: "msg_1", text: "Other session", structured_payloads: [], pending_confirmation: null, pending_action: null, tool_activity: [], ui_action_proposals: [], warnings: [], state_version: 0 };
+    const finalized = finalizeStreamedMessage(messages, "session_2", response);
+
+    expect(finalized).toHaveLength(2);
+    expect(finalized[0]).toMatchObject({ session_id: "session_1", content: "" });
+    expect(finalized[1]).toMatchObject({ session_id: "session_2", content: "Other session" });
   });
 });
