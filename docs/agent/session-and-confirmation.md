@@ -17,10 +17,10 @@ Schema version: `3`.
 
 Existing `data/jobs` and `data/uploads` JSON storage is unchanged.
 
-Schema initialization upgrades supported version-1 confirmation columns to
-version 2 and recognizes version 3 deletion receipts. An unknown schema version
-fails with `AGENT_SCHEMA_MISMATCH`; this is not yet the general migration
-tooling planned for v0.3.
+Schema initialization upgrades supported versions sequentially and atomically.
+A newer unsupported schema fails with `AGENT_SCHEMA_MISMATCH` instead of
+attempting a downgrade. See the [migration and recovery guide](database-migrations.md)
+for exact version steps, backup instructions, and failure behavior.
 
 ## Concurrency and Integrity
 

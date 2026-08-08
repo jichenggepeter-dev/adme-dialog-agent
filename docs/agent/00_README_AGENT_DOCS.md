@@ -28,6 +28,7 @@ commit a provider key, token, cookie, or private endpoint configuration.
 4. [Tool reference](tool-reference.md)
 5. [Frontend Assistant contract](frontend-assistant-contract.md)
 6. [Safety and audit](safety-and-audit.md)
+7. [Database migrations and recovery](database-migrations.md)
 
 Current code and tests are the executable authority. The documents above
 explain their contracts and safety boundaries.
