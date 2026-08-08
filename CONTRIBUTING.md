@@ -47,18 +47,23 @@ a clean clone rather than depending on a contributor's machine.
 
 ## Development setup
 
-Prerequisites:
-
-- Python 3.11 or newer
-- Node.js 20.9 or newer
-- npm
+For the cleanest first run, use the pinned Docker Compose environment:
 
 ```bash
-cp .env.example .env
+docker compose up --build
+```
+
+For native development, install uv 0.11.32, Node.js 22.23.1, and npm. uv
+installs Python 3.11.15 from `.python-version` when needed.
+
+```bash
 make setup
-export ADME_MOCK_MODE=true
 make dev
 ```
+
+See the [contributor environment guide](docs/contributor-environment.md) for
+supported platforms, incremental Compose Watch, disposable data, and recovery
+commands.
 
 The default development and test workflow must not require a real model API
 key. Keep all credentials in the backend `.env`; never use a `NEXT_PUBLIC_*`
@@ -69,11 +74,13 @@ variable for a secret.
 Run the narrowest tests for your change, then the relevant broader checks:
 
 ```bash
-make check
+make verify
 ```
 
-`make check` validates repository-local documentation links, backend tests,
-frontend lint and types, frontend unit tests, and the production build.
+`make verify` validates repository-local documentation links, backend tests,
+deterministic Agent evaluation, frontend lint and types, frontend unit tests,
+and the production build. It uses no provider secret. `make check` remains an
+alias for existing contributor notes.
 
 Use Playwright for changed user workflows:
 

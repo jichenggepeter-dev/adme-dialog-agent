@@ -8,6 +8,7 @@ records. Start here instead of guessing from a filename.
 - [Repository README](../README.md): product overview and first local run
 - [Contributing guide](../CONTRIBUTING.md): contribution rules and pull-request checks
 - [Testing guide](testing-guide.md): Mock Mode, real-model checks, and test layers
+- [Reproducible contributor environment](contributor-environment.md): pinned Docker and native workflows
 - [Security policy](../SECURITY.md): secrets and private vulnerability reports
 - [Project positioning](project-positioning.md): users, non-goals, and scientific boundary
 - [Concise roadmap](../ROADMAP.md): current milestones
