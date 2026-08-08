@@ -33,6 +33,7 @@ MODEL_REVISION = "826711e54e001c83835913827a843d8dd0a1def9"
 MODEL_LICENSE = "Apache-2.0"
 DENSE_MINIMUM_SCORE = 0.35
 RRF_K = 60
+STALE_QUERY_TERMS = ("withdrawn", "superseded", "obsolete")
 DEFAULT_JSON_REPORT = ROOT / "evaluation" / "reports" / "hybrid-retrieval-study-v1.json"
 DEFAULT_MARKDOWN_REPORT = ROOT / "evaluation" / "reports" / "hybrid-retrieval-study-v1.md"
 
@@ -44,6 +45,11 @@ def _metadata_text(document: dict[str, Any]) -> str:
     return " ".join(
         [date, parts[0], month, document["version"], document["status"]]
     )
+
+
+def _lifecycle_match(query: str, document: dict[str, Any]) -> bool:
+    wants_stale = any(term in query.lower() for term in STALE_QUERY_TERMS)
+    return (document["status"] != "current") == wants_stale
 
 
 def rank_metadata_lexical(
@@ -65,6 +71,8 @@ def rank_metadata_lexical(
     required_overlap = min(2, len(set(query_tokens)))
     sources = []
     for score, document in ranked:
+        if not _lifecycle_match(query, document):
+            continue
         overlap = len(set(query_tokens) & set(document["tokens"]))
         source_id = document["source_id"]
         if score >= 0.2 and overlap >= required_overlap and source_id not in sources:
@@ -125,6 +133,8 @@ def _dense_ranker(
         )
         sources = []
         for score, document in ordered:
+            if not _lifecycle_match(query, document):
+                continue
             source_id = document["source_id"]
             if score >= DENSE_MINIMUM_SCORE and source_id not in sources:
                 sources.append(source_id)

@@ -16,6 +16,13 @@ def test_metadata_ranker_uses_existing_source_fields_and_still_abstains() -> Non
         "Which 2016 final guidance concerns toxic metabolites?", documents
     )[0] == "fda-metabolites-2016"
     assert rank_metadata_lexical(
+        "What FDA guidance covers enzyme and transporter mediated drug interactions?",
+        documents,
+    )[0] == "fda-m12-2024"
+    assert rank_metadata_lexical(
+        "Which superseded 2020 record covers CYP450 interactions?", documents
+    )[0] == "fda-in-vitro-ddi-2020-withdrawn"
+    assert rank_metadata_lexical(
         "Does this collection cover quantum entanglement in tablet coatings?", documents
     ) == []
 
