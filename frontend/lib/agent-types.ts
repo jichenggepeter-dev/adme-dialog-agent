@@ -201,6 +201,43 @@ export type AgentSession = {
   state_version: number;
 };
 
+export type SessionExportFormat = "json" | "markdown";
+
+export type SessionExportProposal = {
+  action: {
+    action_id: string;
+    session_id: string;
+    action_type: "session_export_v1";
+    status: string;
+    payload: Record<string, unknown>;
+    expected_state_version: number;
+    created_at: string;
+    expires_at: string;
+    consumed_at: string | null;
+  };
+  schema_version: "1.0";
+  included: string[];
+  excluded: string[];
+  max_export_bytes: number;
+  snapshot_taken_at: string;
+  counts: {
+    messages: number;
+    confirmations: number;
+    activities: number;
+    resources: number;
+    selected_resources: number;
+  };
+};
+
+export type SessionExportResult = {
+  status: "succeeded" | "rejected";
+  filename: string | null;
+  media_type: string | null;
+  content: string | null;
+  size_bytes: number | null;
+  schema_version: "1.0";
+};
+
 export type AgentError = {
   code: string;
   message: string;

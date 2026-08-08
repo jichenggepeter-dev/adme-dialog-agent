@@ -8,6 +8,8 @@ import {
   predictionResourceSchema,
   resourceResponseSchema,
   sessionSchema,
+  sessionExportProposalSchema,
+  sessionExportResultSchema,
 } from "./agent-schemas";
 import type {
   AgentResponse,
@@ -16,6 +18,9 @@ import type {
   AgentStreamResponseCompleted,
   Confirmation,
   PageContext,
+  SessionExportFormat,
+  SessionExportProposal,
+  SessionExportResult,
 } from "./agent-types";
 import type { z } from "zod";
 import type { PredictionResponse } from "./types";
@@ -392,6 +397,41 @@ export const getAgentMessages = (id: string) =>
     messagePageSchema,
     undefined,
     10_000,
+  );
+
+export const prepareSessionExport = (
+  sessionId: string,
+  format: SessionExportFormat,
+  stateVersion: number,
+): Promise<SessionExportProposal> =>
+  request(
+    `/agent/sessions/${encodeURIComponent(sessionId)}/exports`,
+    sessionExportProposalSchema,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        format,
+        expected_state_version: stateVersion,
+        resource_ids: [],
+      }),
+    },
+    15_000,
+  );
+
+export const decideSessionExport = (
+  sessionId: string,
+  actionId: string,
+  decision: "approve" | "reject",
+  stateVersion: number,
+): Promise<SessionExportResult> =>
+  request(
+    `/agent/sessions/${encodeURIComponent(sessionId)}/exports/${encodeURIComponent(actionId)}`,
+    sessionExportResultSchema,
+    {
+      method: "POST",
+      body: JSON.stringify({ decision, expected_state_version: stateVersion }),
+    },
+    30_000,
   );
 
 export const sendAgentMessage = (

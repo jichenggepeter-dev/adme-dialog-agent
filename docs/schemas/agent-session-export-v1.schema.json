@@ -1,0 +1,848 @@
+{
+  "$defs": {
+    "SessionExportActivity": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration Ms"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "event_type": {
+          "title": "Event Type",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "tool_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Name"
+        }
+      },
+      "required": [
+        "event_type",
+        "status",
+        "created_at"
+      ],
+      "title": "SessionExportActivity",
+      "type": "object"
+    },
+    "SessionExportActivityWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "events": {
+          "items": {
+            "$ref": "#/$defs/SessionExportActivity"
+          },
+          "title": "Events",
+          "type": "array"
+        },
+        "included_count": {
+          "title": "Included Count",
+          "type": "integer"
+        },
+        "limit": {
+          "title": "Limit",
+          "type": "integer"
+        },
+        "older_omitted_count": {
+          "title": "Older Omitted Count",
+          "type": "integer"
+        },
+        "total_available": {
+          "title": "Total Available",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "limit",
+        "total_available",
+        "included_count",
+        "older_omitted_count",
+        "events"
+      ],
+      "title": "SessionExportActivityWindow",
+      "type": "object"
+    },
+    "SessionExportCompoundData": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical_smiles": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Canonical Smiles"
+        },
+        "compound_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Compound Id"
+        },
+        "data_source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Source"
+        },
+        "input_query": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Query"
+        },
+        "isomeric_smiles": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Isomeric Smiles"
+        },
+        "kind": {
+          "const": "compound",
+          "default": "compound",
+          "title": "Kind",
+          "type": "string"
+        },
+        "molecular_formula": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Molecular Formula"
+        },
+        "molecular_weight": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Molecular Weight"
+        },
+        "preferred_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preferred Name"
+        },
+        "pubchem_cid": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pubchem Cid"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "title": "SessionExportCompoundData",
+      "type": "object"
+    },
+    "SessionExportConfirmation": {
+      "additionalProperties": false,
+      "properties": {
+        "confirmation_id": {
+          "title": "Confirmation Id",
+          "type": "string"
+        },
+        "consumed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Consumed At"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "expected_state_version": {
+          "minimum": 0,
+          "title": "Expected State Version",
+          "type": "integer"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "payload_hash": {
+          "title": "Payload Hash",
+          "type": "string"
+        },
+        "result_resource_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result Resource Id"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "confirmation_id",
+        "type",
+        "status",
+        "payload_hash",
+        "expected_state_version",
+        "created_at",
+        "expires_at"
+      ],
+      "title": "SessionExportConfirmation",
+      "type": "object"
+    },
+    "SessionExportLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "activities": {
+          "title": "Activities",
+          "type": "integer"
+        },
+        "confirmations": {
+          "title": "Confirmations",
+          "type": "integer"
+        },
+        "final_bytes": {
+          "title": "Final Bytes",
+          "type": "integer"
+        },
+        "messages": {
+          "title": "Messages",
+          "type": "integer"
+        },
+        "resource_manifest": {
+          "title": "Resource Manifest",
+          "type": "integer"
+        },
+        "selected_resources": {
+          "title": "Selected Resources",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "messages",
+        "confirmations",
+        "activities",
+        "resource_manifest",
+        "selected_resources",
+        "final_bytes"
+      ],
+      "title": "SessionExportLimits",
+      "type": "object"
+    },
+    "SessionExportMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "message_id": {
+          "title": "Message Id",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message_id",
+        "role",
+        "content",
+        "created_at"
+      ],
+      "title": "SessionExportMessage",
+      "type": "object"
+    },
+    "SessionExportMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "state_version": {
+          "minimum": 0,
+          "title": "State Version",
+          "type": "integer"
+        },
+        "status": {
+          "const": "active",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "created_at",
+        "expires_at",
+        "state_version"
+      ],
+      "title": "SessionExportMetadata",
+      "type": "object"
+    },
+    "SessionExportPredictionCategory": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "endpoints": {
+          "items": {
+            "$ref": "#/$defs/SessionExportPredictionEndpoint"
+          },
+          "title": "Endpoints",
+          "type": "array"
+        }
+      },
+      "required": [
+        "category",
+        "endpoints"
+      ],
+      "title": "SessionExportPredictionCategory",
+      "type": "object"
+    },
+    "SessionExportPredictionData": {
+      "additionalProperties": false,
+      "properties": {
+        "categories": {
+          "items": {
+            "$ref": "#/$defs/SessionExportPredictionCategory"
+          },
+          "title": "Categories",
+          "type": "array"
+        },
+        "compound_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Compound Id"
+        },
+        "disclaimer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Disclaimer"
+        },
+        "kind": {
+          "const": "prediction",
+          "default": "prediction",
+          "title": "Kind",
+          "type": "string"
+        },
+        "prediction_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prediction Id"
+        },
+        "prediction_mode": {
+          "enum": [
+            "mock",
+            "real"
+          ],
+          "title": "Prediction Mode",
+          "type": "string"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "prediction_mode"
+      ],
+      "title": "SessionExportPredictionData",
+      "type": "object"
+    },
+    "SessionExportPredictionEndpoint": {
+      "additionalProperties": false,
+      "properties": {
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Display Name"
+        },
+        "endpoint": {
+          "title": "Endpoint",
+          "type": "string"
+        },
+        "metadata_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Metadata Status"
+        },
+        "output_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Type"
+        },
+        "positive_class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Positive Class"
+        },
+        "supports_probability_language": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Supports Probability Language"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "unit_verified": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Verified"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "endpoint"
+      ],
+      "title": "SessionExportPredictionEndpoint",
+      "type": "object"
+    },
+    "SessionExportResourceManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "content_hash": {
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "resource_id": {
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_type": {
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "resource_id",
+        "resource_type",
+        "content_hash",
+        "size_bytes",
+        "created_at",
+        "expires_at"
+      ],
+      "title": "SessionExportResourceManifest",
+      "type": "object"
+    },
+    "SessionExportSelectedResource": {
+      "additionalProperties": false,
+      "properties": {
+        "content_hash": {
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "data": {
+          "discriminator": {
+            "mapping": {
+              "compound": "#/$defs/SessionExportCompoundData",
+              "prediction": "#/$defs/SessionExportPredictionData"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SessionExportCompoundData"
+            },
+            {
+              "$ref": "#/$defs/SessionExportPredictionData"
+            }
+          ],
+          "title": "Data"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "resource_id": {
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_type": {
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "resource_id",
+        "resource_type",
+        "content_hash",
+        "size_bytes",
+        "created_at",
+        "expires_at",
+        "data"
+      ],
+      "title": "SessionExportSelectedResource",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/jichenggepeter-dev/adme-dialog-agent/blob/main/docs/schemas/agent-session-export-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "activity": {
+      "$ref": "#/$defs/SessionExportActivityWindow"
+    },
+    "confirmations": {
+      "items": {
+        "$ref": "#/$defs/SessionExportConfirmation"
+      },
+      "title": "Confirmations",
+      "type": "array"
+    },
+    "excluded_fields": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Excluded Fields",
+      "type": "array"
+    },
+    "export_schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Export Schema Version",
+      "type": "string"
+    },
+    "exported_at": {
+      "format": "date-time",
+      "title": "Exported At",
+      "type": "string"
+    },
+    "included_fields": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Included Fields",
+      "type": "array"
+    },
+    "limits": {
+      "$ref": "#/$defs/SessionExportLimits"
+    },
+    "messages": {
+      "items": {
+        "$ref": "#/$defs/SessionExportMessage"
+      },
+      "title": "Messages",
+      "type": "array"
+    },
+    "prediction_mode": {
+      "enum": [
+        "mock",
+        "real",
+        "mixed",
+        "unknown"
+      ],
+      "title": "Prediction Mode",
+      "type": "string"
+    },
+    "resources": {
+      "items": {
+        "$ref": "#/$defs/SessionExportResourceManifest"
+      },
+      "title": "Resources",
+      "type": "array"
+    },
+    "selected_resources": {
+      "items": {
+        "$ref": "#/$defs/SessionExportSelectedResource"
+      },
+      "title": "Selected Resources",
+      "type": "array"
+    },
+    "session": {
+      "$ref": "#/$defs/SessionExportMetadata"
+    },
+    "snapshot_taken_at": {
+      "format": "date-time",
+      "title": "Snapshot Taken At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "exported_at",
+    "snapshot_taken_at",
+    "prediction_mode",
+    "session",
+    "included_fields",
+    "excluded_fields",
+    "limits",
+    "messages",
+    "confirmations",
+    "activity",
+    "resources",
+    "selected_resources"
+  ],
+  "title": "SessionExportDocument",
+  "type": "object"
+}
