@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "dataset_id": "evidence-retrieval-v1",
+  "description": "Fixed retrieval-only cases for comparing methods against the unchanged bundled FDA evidence corpus.",
+  "top_k": 3,
+  "cases": [
+    {
+      "id": "direct-ddi",
+      "category": "direct",
+      "query": "What FDA guidance covers enzyme and transporter mediated drug interactions?",
+      "expected_source_ids": ["fda-m12-2024"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "direct-mass-balance",
+      "category": "direct",
+      "query": "Which guidance explains human radiolabeled mass balance study design and reporting?",
+      "expected_source_ids": ["fda-mass-balance-2024"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "direct-metabolites",
+      "category": "direct",
+      "query": "Where does FDA discuss nonclinical toxicity testing for drug metabolites?",
+      "expected_source_ids": ["fda-metabolites-2016"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "direct-renal",
+      "category": "direct",
+      "query": "Which guidance studies renal impairment effects on investigational drug pharmacokinetics?",
+      "expected_source_ids": ["fda-renal-pk-2024"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "paraphrase-liver",
+      "category": "paraphrase",
+      "query": "Where can I read about checking liver damage biomarkers before a medicine is approved?",
+      "expected_source_ids": ["fda-dili-2009"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "paraphrase-food",
+      "category": "paraphrase",
+      "query": "What material explains how meals may change absorption of oral medicines during development?",
+      "expected_source_ids": ["fda-food-effect-2026"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "paraphrase-renal",
+      "category": "paraphrase",
+      "query": "How should sponsors examine kidney dysfunction changing the way an experimental medicine moves through the body?",
+      "expected_source_ids": ["fda-renal-pk-2024"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "paraphrase-mass-balance",
+      "category": "paraphrase",
+      "query": "Which document covers a radioactive accounting study of where a medicine goes after people receive it?",
+      "expected_source_ids": ["fda-mass-balance-2024"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "paraphrase-metabolites",
+      "category": "paraphrase",
+      "query": "What source explains when harmful breakdown products need animal safety testing?",
+      "expected_source_ids": ["fda-metabolites-2016"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "abbreviation-ddi",
+      "category": "abbreviation",
+      "query": "Which current material covers DDI work?",
+      "expected_source_ids": ["fda-m12-2024"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "abbreviation-dili",
+      "category": "abbreviation",
+      "query": "Where is DILI monitoring before marketing discussed?",
+      "expected_source_ids": ["fda-dili-2009"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "abbreviation-food-effect",
+      "category": "abbreviation",
+      "query": "Which guidance concerns FE trials for oral products in an IND?",
+      "expected_source_ids": ["fda-food-effect-2026"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "abbreviation-renal",
+      "category": "abbreviation",
+      "query": "Which source discusses PK changes with RI?",
+      "expected_source_ids": ["fda-renal-pk-2024"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "metadata-m12-date",
+      "category": "metadata",
+      "query": "Which current August 2024 source discusses transporters?",
+      "expected_source_ids": ["fda-m12-2024"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "metadata-metabolites-year",
+      "category": "metadata",
+      "query": "Which 2016 final guidance concerns toxic metabolites?",
+      "expected_source_ids": ["fda-metabolites-2016"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "metadata-withdrawn",
+      "category": "metadata",
+      "query": "Which superseded 2020 record covers CYP450 interactions?",
+      "expected_source_ids": ["fda-in-vitro-ddi-2020-withdrawn"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "metadata-food-date",
+      "category": "metadata",
+      "query": "Which May 2026 source concerns food and oral medicines?",
+      "expected_source_ids": ["fda-food-effect-2026"],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "hard-negative-quantum",
+      "category": "hard_negative",
+      "query": "Does this collection cover quantum entanglement in tablet coatings?",
+      "expected_source_ids": [],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "hard-negative-zebrafish",
+      "category": "hard_negative",
+      "query": "Is there evidence about a zebrafish fluorescence endpoint?",
+      "expected_source_ids": [],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "hard-negative-crispr",
+      "category": "hard_negative",
+      "query": "Which passage explains CRISPR editing efficiency in stem cells?",
+      "expected_source_ids": [],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    },
+    {
+      "id": "hard-negative-docking",
+      "category": "hard_negative",
+      "query": "Where are crystal docking scores and protein binding affinities reported?",
+      "expected_source_ids": [],
+      "leakage_rule": "no_source_id_or_exact_title_in_query"
+    }
+  ]
+}

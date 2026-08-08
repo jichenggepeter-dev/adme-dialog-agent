@@ -27,6 +27,7 @@ provider key:
 ```bash
 python scripts/build_evidence_index.py
 python scripts/evaluate_evidence_rag.py
+python scripts/evaluate_evidence_retrieval.py
 ```
 
 The builder creates content hashes, stable chunk IDs, and lexical term counts.
@@ -35,6 +36,10 @@ The evaluator reports retrieval relevance, claim citation support, status
 accuracy, and abstention accuracy separately. Its conflict case uses a clearly
 labelled synthetic test fixture; the shipped FDA corpus does not invent a
 scientific disagreement.
+
+The separate [retrieval baseline](rag/retrieval-baseline.md) uses harder fixed
+queries to compare ranking methods without changing the corpus or weakening the
+existing safety and citation regression set.
 
 ## Runtime behavior
 

@@ -7,7 +7,7 @@ BACKEND_PORT ?= 8000
 FRONTEND_HOST ?= 127.0.0.1
 FRONTEND_PORT ?= 3000
 
-.PHONY: setup dev-check test test-unit test-api test-agent test-agent-integration smoke-mock smoke-real smoke-agent-llm backend frontend dev batch-demo onboarding docs-check verify-docs verify-backend verify-frontend verify check container-up container-watch container-down container-reset verify-container
+.PHONY: setup dev-check test test-unit test-api test-agent test-agent-integration smoke-mock smoke-real smoke-agent-llm backend frontend dev batch-demo onboarding evaluate-rag-baseline docs-check verify-docs verify-backend verify-frontend verify check container-up container-watch container-down container-reset verify-container
 
 setup:
 	@command -v $(UV) >/dev/null || { echo "[FAIL] uv 0.11.32 is required. See docs/contributor-environment.md"; exit 1; }
@@ -60,6 +60,9 @@ onboarding:
 		$(COMPOSE) up --build --wait
 	@echo "Onboarding workspace: http://127.0.0.1:3000/single"
 
+evaluate-rag-baseline:
+	$(PYTHON) scripts/evaluate_evidence_retrieval.py
+
 docs-check:
 	$(PYTHON) scripts/check_markdown_links.py
 
@@ -73,6 +76,7 @@ verify-backend:
 	@echo "==> Deterministic Agent evaluation (retry: make verify-backend)"
 	@mkdir -p "$(VERIFY_REPORT_DIR)"
 	ADME_MOCK_MODE=true AGENT_ENABLED=false OPENAI_AGENTS_DISABLE_TRACING=1 $(PYTHON) scripts/evaluate_agent.py --mode deterministic_rules --mode mock_provider --json-output "$(VERIFY_REPORT_DIR)/agent-eval.json" --markdown-output "$(VERIFY_REPORT_DIR)/agent-eval.md"
+	$(PYTHON) scripts/evaluate_evidence_retrieval.py --json-output "$(VERIFY_REPORT_DIR)/evidence-retrieval-baseline.json" --markdown-output "$(VERIFY_REPORT_DIR)/evidence-retrieval-baseline.md"
 
 verify-frontend:
 	@echo "==> Frontend gate (retry: make verify-frontend)"
