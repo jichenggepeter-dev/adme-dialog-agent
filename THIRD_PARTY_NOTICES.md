@@ -4,7 +4,7 @@ ADME Dialog Agent source code is distributed under the MIT License. Third-party
 software, model artifacts, datasets, services, and media keep their own terms.
 The dependency lockfiles are the authoritative full package inventories; this
 file highlights direct dependencies and scientifically important transitive
-components reviewed on 2026-08-02.
+components reviewed on 2026-08-08.
 
 ## Python runtime
 
@@ -36,14 +36,15 @@ Development packages reviewed include pytest 9.1.1 (MIT) and httpx2 2.9.1
 | Component | Reviewed version | Declared license |
 | --- | --- | --- |
 | Phosphor Icons React | 2.1.10 | MIT |
-| Next.js | 16.2.12 | MIT |
+| Next.js | 16.3.0 | MIT |
 | React / React DOM | 19.2.4 | MIT |
 | react-markdown | 10.1.0 | MIT |
 | remark-gfm | 4.0.1 | MIT |
 | Zod | 4.4.3 | MIT |
 
 The direct frontend development packages are MIT-licensed except Playwright
-1.61.1 and TypeScript 5.9.3, which declare Apache-2.0. Exact resolved versions
+1.61.1 and TypeScript 5.9.3, which declare Apache-2.0, and
+`@axe-core/playwright` 4.12.1, which declares MPL-2.0. Exact resolved versions
 and all transitive packages are recorded in `frontend/package-lock.json`.
 
 ## ADMET-AI models and reference data
