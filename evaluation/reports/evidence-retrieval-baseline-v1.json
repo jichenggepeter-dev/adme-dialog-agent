@@ -1,0 +1,407 @@
+{
+  "benchmark": {
+    "corpus_sha256": "b3bf131163b079a014e4ec04bdc6ba4e90963ceed636cd5d8f68b1b2c52ea3d3",
+    "dataset_id": "evidence-retrieval-v1",
+    "network_access": false,
+    "new_runtime_dependencies": [],
+    "python_version": "3.11.14",
+    "query_count": 21,
+    "retrieval_config": {
+      "implementation": "app.services.evidence.EvidenceService.search",
+      "method": "deterministic lexical BM25-style scoring",
+      "minimum_query_token_overlap": "min(2, unique query tokens)",
+      "minimum_score": 0.2,
+      "top_k": 3
+    },
+    "schema_version": 1
+  },
+  "latency": {
+    "median_ms": 0.0367,
+    "p95_ms": 0.0717,
+    "sample_count": 21,
+    "scope": "Local comparative measurement only; not a production latency claim."
+  },
+  "quality": {
+    "by_category": {
+      "abbreviation": {
+        "mrr": 0.25,
+        "query_count": 4,
+        "recall_at_1": 0.25,
+        "recall_at_3": 0.25
+      },
+      "direct": {
+        "mrr": 1.0,
+        "query_count": 4,
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0
+      },
+      "hard_negative": {
+        "mrr": 0.0,
+        "query_count": 4,
+        "recall_at_1": 0.0,
+        "recall_at_3": 0.0
+      },
+      "metadata": {
+        "mrr": 0.5,
+        "query_count": 4,
+        "recall_at_1": 0.5,
+        "recall_at_3": 0.5
+      },
+      "paraphrase": {
+        "mrr": 0.9,
+        "query_count": 5,
+        "recall_at_1": 0.8,
+        "recall_at_3": 1.0
+      }
+    },
+    "hard_negative_accuracy": 1.0,
+    "overall": {
+      "mrr": 0.6764705882352942,
+      "query_count": 17,
+      "recall_at_1": 0.6470588235294118,
+      "recall_at_3": 0.7058823529411765
+    }
+  },
+  "rankings": [
+    {
+      "category": "direct",
+      "expected_source_ids": [
+        "fda-m12-2024"
+      ],
+      "id": "direct-ddi",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "What FDA guidance covers enzyme and transporter mediated drug interactions?",
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-m12-2024"
+      ]
+    },
+    {
+      "category": "direct",
+      "expected_source_ids": [
+        "fda-mass-balance-2024"
+      ],
+      "id": "direct-mass-balance",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "Which guidance explains human radiolabeled mass balance study design and reporting?",
+      "result_status": "partial",
+      "retrieved_source_ids": [
+        "fda-mass-balance-2024",
+        "fda-renal-pk-2024"
+      ]
+    },
+    {
+      "category": "direct",
+      "expected_source_ids": [
+        "fda-metabolites-2016"
+      ],
+      "id": "direct-metabolites",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "Where does FDA discuss nonclinical toxicity testing for drug metabolites?",
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-metabolites-2016",
+        "fda-m12-2024",
+        "fda-food-effect-2026"
+      ]
+    },
+    {
+      "category": "direct",
+      "expected_source_ids": [
+        "fda-renal-pk-2024"
+      ],
+      "id": "direct-renal",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "Which guidance studies renal impairment effects on investigational drug pharmacokinetics?",
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-renal-pk-2024",
+        "fda-m12-2024",
+        "fda-food-effect-2026"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "expected_source_ids": [
+        "fda-dili-2009"
+      ],
+      "id": "paraphrase-liver",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "Where can I read about checking liver damage biomarkers before a medicine is approved?",
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-dili-2009"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "expected_source_ids": [
+        "fda-food-effect-2026"
+      ],
+      "id": "paraphrase-food",
+      "quality": {
+        "recall_at_1": 0.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 0.5
+      },
+      "query": "What material explains how meals may change absorption of oral medicines during development?",
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-dili-2009",
+        "fda-food-effect-2026",
+        "fda-metabolites-2016"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "expected_source_ids": [
+        "fda-renal-pk-2024"
+      ],
+      "id": "paraphrase-renal",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "How should sponsors examine kidney dysfunction changing the way an experimental medicine moves through the body?",
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-renal-pk-2024"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "expected_source_ids": [
+        "fda-mass-balance-2024"
+      ],
+      "id": "paraphrase-mass-balance",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "Which document covers a radioactive accounting study of where a medicine goes after people receive it?",
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-mass-balance-2024",
+        "fda-renal-pk-2024"
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "expected_source_ids": [
+        "fda-metabolites-2016"
+      ],
+      "id": "paraphrase-metabolites",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "What source explains when harmful breakdown products need animal safety testing?",
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-metabolites-2016"
+      ]
+    },
+    {
+      "category": "abbreviation",
+      "expected_source_ids": [
+        "fda-m12-2024"
+      ],
+      "id": "abbreviation-ddi",
+      "quality": {
+        "recall_at_1": 0.0,
+        "recall_at_3": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "query": "Which current material covers DDI work?",
+      "result_status": "no_evidence",
+      "retrieved_source_ids": []
+    },
+    {
+      "category": "abbreviation",
+      "expected_source_ids": [
+        "fda-dili-2009"
+      ],
+      "id": "abbreviation-dili",
+      "quality": {
+        "recall_at_1": 0.0,
+        "recall_at_3": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "query": "Where is DILI monitoring before marketing discussed?",
+      "result_status": "no_evidence",
+      "retrieved_source_ids": []
+    },
+    {
+      "category": "abbreviation",
+      "expected_source_ids": [
+        "fda-food-effect-2026"
+      ],
+      "id": "abbreviation-food-effect",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "Which guidance concerns FE trials for oral products in an IND?",
+      "result_status": "supported",
+      "retrieved_source_ids": [
+        "fda-food-effect-2026",
+        "fda-renal-pk-2024"
+      ]
+    },
+    {
+      "category": "abbreviation",
+      "expected_source_ids": [
+        "fda-renal-pk-2024"
+      ],
+      "id": "abbreviation-renal",
+      "quality": {
+        "recall_at_1": 0.0,
+        "recall_at_3": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "query": "Which source discusses PK changes with RI?",
+      "result_status": "no_evidence",
+      "retrieved_source_ids": []
+    },
+    {
+      "category": "metadata",
+      "expected_source_ids": [
+        "fda-m12-2024"
+      ],
+      "id": "metadata-m12-date",
+      "quality": {
+        "recall_at_1": 0.0,
+        "recall_at_3": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "query": "Which current August 2024 source discusses transporters?",
+      "result_status": "no_evidence",
+      "retrieved_source_ids": []
+    },
+    {
+      "category": "metadata",
+      "expected_source_ids": [
+        "fda-metabolites-2016"
+      ],
+      "id": "metadata-metabolites-year",
+      "quality": {
+        "recall_at_1": 0.0,
+        "recall_at_3": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "query": "Which 2016 final guidance concerns toxic metabolites?",
+      "result_status": "no_evidence",
+      "retrieved_source_ids": []
+    },
+    {
+      "category": "metadata",
+      "expected_source_ids": [
+        "fda-in-vitro-ddi-2020-withdrawn"
+      ],
+      "id": "metadata-withdrawn",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "Which superseded 2020 record covers CYP450 interactions?",
+      "result_status": "stale_only",
+      "retrieved_source_ids": [
+        "fda-in-vitro-ddi-2020-withdrawn"
+      ]
+    },
+    {
+      "category": "metadata",
+      "expected_source_ids": [
+        "fda-food-effect-2026"
+      ],
+      "id": "metadata-food-date",
+      "quality": {
+        "recall_at_1": 1.0,
+        "recall_at_3": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "query": "Which May 2026 source concerns food and oral medicines?",
+      "result_status": "partial",
+      "retrieved_source_ids": [
+        "fda-food-effect-2026"
+      ]
+    },
+    {
+      "category": "hard_negative",
+      "expected_source_ids": [],
+      "id": "hard-negative-quantum",
+      "quality": {
+        "recall_at_1": null,
+        "recall_at_3": null,
+        "reciprocal_rank": null
+      },
+      "query": "Does this collection cover quantum entanglement in tablet coatings?",
+      "result_status": "no_evidence",
+      "retrieved_source_ids": []
+    },
+    {
+      "category": "hard_negative",
+      "expected_source_ids": [],
+      "id": "hard-negative-zebrafish",
+      "quality": {
+        "recall_at_1": null,
+        "recall_at_3": null,
+        "reciprocal_rank": null
+      },
+      "query": "Is there evidence about a zebrafish fluorescence endpoint?",
+      "result_status": "no_evidence",
+      "retrieved_source_ids": []
+    },
+    {
+      "category": "hard_negative",
+      "expected_source_ids": [],
+      "id": "hard-negative-crispr",
+      "quality": {
+        "recall_at_1": null,
+        "recall_at_3": null,
+        "reciprocal_rank": null
+      },
+      "query": "Which passage explains CRISPR editing efficiency in stem cells?",
+      "result_status": "no_evidence",
+      "retrieved_source_ids": []
+    },
+    {
+      "category": "hard_negative",
+      "expected_source_ids": [],
+      "id": "hard-negative-docking",
+      "quality": {
+        "recall_at_1": null,
+        "recall_at_3": null,
+        "reciprocal_rank": null
+      },
+      "query": "Where are crystal docking scores and protein binding affinities reported?",
+      "result_status": "no_evidence",
+      "retrieved_source_ids": []
+    }
+  ]
+}
