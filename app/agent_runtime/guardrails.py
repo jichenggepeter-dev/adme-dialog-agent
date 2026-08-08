@@ -61,6 +61,8 @@ FORBIDDEN_CLAIM_PATTERNS = [
     r"\b(?:compound|molecule|candidate|drug)\s+(?:is|appears|looks)\s+(?:safer|better|best|worst)\b",
     r"\b(?:experimental(?:ly)? (?:measured|confirmed)|clinical evidence)\b",
     r"\b(?:zero|no) (?:toxicity|hazard|risk)\b",
+    r"\b(?:fda|ema|regulator(?:y)?) approved\b",
+    r"\bapproved for (?:clinical |human )?use\b",
 ]
 
 

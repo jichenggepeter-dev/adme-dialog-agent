@@ -297,7 +297,12 @@ class AgentRuntime:
                 exc.code,
                 str(exc),
                 503,
-                retryable=exc.code in {"AGENT_TIMEOUT", "AGENT_PROVIDER_UNAVAILABLE", "AGENT_PROVIDER_ERROR"},
+                retryable=exc.code in {
+                    "AGENT_TIMEOUT",
+                    "AGENT_RATE_LIMITED",
+                    "AGENT_PROVIDER_UNAVAILABLE",
+                    "AGENT_PROVIDER_ERROR",
+                },
             ) from None
         finally:
             await provider.client.close()
