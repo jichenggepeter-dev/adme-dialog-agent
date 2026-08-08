@@ -2,7 +2,12 @@
 
 ## Scope
 
-The backend core adds one non-streaming OpenAI Agents SDK Agent around existing deterministic ADME services. It does not add a frontend, streaming, multi-agent orchestration, MCP, hosted tools, shell, file, web, deployment, or batch mutation tools.
+The backend core provides one OpenAI Agents SDK Agent around existing
+deterministic ADME services. It supports a typed NDJSON response stream, a
+deterministic no-key Mock provider, bounded Batch reads and confirmed Batch
+actions, evidence lookup, session export, and session deletion. It does not add
+multi-agent orchestration, MCP, hosted tools, arbitrary shell, arbitrary file
+access, unrestricted web access, or production deployment.
 
 ```text
 FastAPI /agent routes
@@ -18,6 +23,7 @@ FastAPI /agent routes
         -> confirmations/actions
         -> bounded JSON resources
         -> local audit events
+        -> minimal hashed deletion receipts
 ```
 
 ## Neutral Services
@@ -33,7 +39,7 @@ The legacy `app.agent.predict_adme` now delegates to the neutral prediction serv
 `app/agent_runtime/runtime.py` creates exactly one `Agent` per request with:
 
 - `OpenAIResponsesModel` from explicit environment configuration.
-- Eleven strict function tools and no other tool type.
+- Fifteen strict function tools and no other tool type.
 - `parallel_tool_calls=False`, bounded output, `max_turns=8`, and service-side maximum tool-call enforcement.
 - Hosted SDK tracing disabled and sensitive trace input disabled.
 - Application-owned audit events stored locally with redacted summaries.
@@ -42,7 +48,23 @@ Input guardrails run before the provider. Tool authorization is enforced structu
 
 ## Feature Flag
 
-`AGENT_ENABLED=false` is the default. Disabled Agent routes return `AGENT_DISABLED`, while existing health, Single, Batch, About, `/predict`, and legacy `/chat` remain available. Provider settings are loaded only for an enabled `/agent/chat` request.
+`AGENT_ENABLED=false` is the default. Disabled Agent routes return
+`AGENT_DISABLED`, while existing health, Single, Batch, About, `/predict`, and
+legacy `/chat` remain available. Provider settings are loaded only for an
+enabled Agent request. `AGENT_PROVIDER_MODE=mock` runs the versioned,
+deterministic Agent scenarios without constructing an external provider client.
+
+## Transport and user control
+
+`POST /agent/chat/stream` returns strict version-1 NDJSON events for heartbeat,
+tool start/completion, message deltas, confirmation, completion, and error. The
+runtime currently finishes its bounded turn before serializing captured tool
+lifecycle events; the UI does not present this as chain-of-thought or provider
+tracing. The non-streaming `POST /agent/chat` contract remains available.
+
+Prediction, Batch execution, export, and deletion remain explicit-confirmation
+operations. Export and deletion are separate session-owned control-plane
+actions rather than Agent tools, so a model cannot initiate either operation.
 
 ## Local-Only Access Boundary
 
