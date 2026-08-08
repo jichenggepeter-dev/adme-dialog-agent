@@ -11,7 +11,7 @@ FRONTEND_PORT ?= 3000
 setup:
 	@if [ ! -d .venv ]; then python3 -m venv .venv; else echo "Using existing .venv (not recreating it)."; fi
 	$(PIP) install -r requirements.txt
-	@if [ -f frontend/package.json ]; then cd frontend && npm install; fi
+	@if [ -f frontend/package.json ]; then cd frontend && npm ci; fi
 	@echo "Setup complete. Next: export ADME_MOCK_MODE=true && make dev"
 
 test:
