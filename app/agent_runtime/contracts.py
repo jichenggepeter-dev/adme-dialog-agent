@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -107,6 +107,9 @@ class ToolActivity(StrictModel):
     status: Literal["completed", "error", "blocked"]
     error_code: str | None = None
     resource_id: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    duration_ms: int | None = Field(default=None, ge=0)
 
 
 class UIActionBase(StrictModel):
@@ -405,6 +408,7 @@ class AgentStreamEnvelope(StrictModel):
     message_id: str = Field(min_length=1, max_length=128)
     correlation_id: str = Field(min_length=1, max_length=128)
     sequence: int = Field(ge=0)
+    occurred_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class AgentStreamHeartbeat(AgentStreamEnvelope):

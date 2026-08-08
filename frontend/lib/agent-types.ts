@@ -60,6 +60,25 @@ export type ToolActivity = {
   status: "completed" | "error" | "blocked";
   error_code: string | null;
   resource_id: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  duration_ms?: number | null;
+};
+
+export type AgentActivityItem = {
+  id: string;
+  kind: "request" | "tool" | "confirmation" | "evidence" | "unknown" | "error" | "response";
+  status: "started" | "completed" | "waiting" | "supported" | "partial" | "conflicting" | "no_evidence" | "prohibited" | "stale_only" | "error" | "blocked";
+  occurred_at: string;
+  correlation_id: string;
+  sequence: number;
+  tool_name?: string;
+  error_code?: string;
+  duration_ms?: number;
+  source_title?: string;
+  source_url?: string;
+  chunk_id?: string;
+  recovery?: "edit_and_retry" | "review_error" | "review_confirmation" | "refine_question";
 };
 
 export type EvidenceCitation = {
@@ -196,6 +215,7 @@ export type AgentStreamEnvelope = {
   message_id: string;
   correlation_id: string;
   sequence: number;
+  occurred_at?: string;
 };
 
 export type AgentStreamHeartbeat = AgentStreamEnvelope & {

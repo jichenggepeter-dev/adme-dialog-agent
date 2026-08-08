@@ -51,6 +51,7 @@ remain the executable source of truth when a document is accidentally stale.
 - [Repository asset provenance](release/asset-provenance.md)
 - [Issue #1 beginner packaging tutorial](issue-1-python-packaging-tutorial.md)
 - [Issue #8 implementation and independent verification](agent/issue-8-implementation-report.md)
+- [Issue #10 activity and evidence trace report](agent/issue-10-activity-trace-report.md)
 - [ChatGPT Pro vs Codex A/B evaluation](experiments/agent-ab-evaluation/stage-2-scorecard.md)
 
 ## Historical records retained in place

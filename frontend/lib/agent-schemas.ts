@@ -305,6 +305,9 @@ export const toolActivitySchema = z
     status: z.enum(["completed", "error", "blocked"]),
     error_code: z.string().nullable(),
     resource_id: z.string().nullable(),
+    started_at: z.string().nullable().default(null),
+    completed_at: z.string().nullable().default(null),
+    duration_ms: z.number().int().nonnegative().nullable().default(null),
   })
   .strict();
 
@@ -417,6 +420,7 @@ const streamEnvelope = {
   message_id: identifier,
   correlation_id: identifier,
   sequence: z.number().int().nonnegative(),
+  occurred_at: z.string().optional(),
 };
 
 export const agentStreamEventSchema = z

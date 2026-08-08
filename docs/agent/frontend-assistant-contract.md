@@ -66,3 +66,27 @@ file, web, or MCP execution exists.
 Agent errors contain `code`, `message`, `details`, `retryable`, and
 `correlation_id`. The UI never renders provider response bodies, prompts,
 credentials, tracebacks, chain of thought, or raw tool arguments.
+
+## Activity and evidence trace
+
+Each streamed assistant message may expose a collapsed, user-facing activity
+trace. It is a bounded projection of the validated stream, not an audit-log
+viewer and not a reasoning transcript.
+
+- The first heartbeat is labeled **Response stream active**. Later heartbeats
+  are ignored by the projection.
+- Tool entries show the allowlisted tool label, lifecycle status, UTC event
+  time, monotonic duration, and a bounded error code when present.
+- Evidence entries reuse the existing bounded citation title and URL. Only
+  HTTP(S) URLs without embedded credentials are interactive.
+- Confirmation and error entries copy no action payload, arguments, exception
+  message, user message, prompt, provider body, or resource contents.
+- The final response replaces its streamed placeholder only when the session
+  and message identity match. The stream parser separately enforces session,
+  message, correlation, sequence, and terminal-event integrity.
+- At most 40 projected entries are retained per assistant message.
+
+The disclosure uses native `details`, `summary`, `ol`, `time`, links, and
+buttons. Status is written as text. A recovery button only returns keyboard
+focus to the message box; it never retries, submits, confirms, or invokes a
+tool automatically.

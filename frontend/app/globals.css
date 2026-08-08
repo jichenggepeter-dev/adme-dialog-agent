@@ -283,6 +283,21 @@ body:has(.review-mode-banner) { --assistant-docked-top: 101px; }
 .tool-activity svg { color: #168272; }
 .tool-activity .tool-error, .tool-activity .tool-blocked { color: #78333b; }
 .tool-activity .tool-error svg, .tool-activity .tool-blocked svg { color: var(--red); }
+.agent-activity-trace { margin-top: 9px; border: 1px solid var(--border); border-radius: 5px; background: white; font-size: 10px; }
+.agent-activity-trace summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 9px; color: var(--navy); cursor: pointer; font-weight: 700; }
+.agent-activity-trace summary:focus-visible, .agent-activity-trace a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.agent-activity-trace summary small { color: var(--muted); font-weight: 500; }
+.activity-correlation { margin: 0; padding: 7px 9px; color: var(--muted); border-top: 1px solid #e7edf1; overflow-wrap: anywhere; }
+.agent-activity-trace ol { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.agent-activity-trace li { padding: 8px 9px; border-top: 1px solid #e7edf1; }
+.agent-activity-trace li > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.activity-status { color: #526b7c; font-size: 9px; white-space: nowrap; }
+.activity-error .activity-status, .activity-blocked .activity-status { color: var(--red); }
+.activity-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 3px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.agent-activity-trace a { display: inline-block; margin-top: 5px; color: var(--blue); text-underline-offset: 2px; }
+.activity-recovery { margin: 5px 0 0; color: #704f10; line-height: 1.45; }
+.activity-recovery-action { margin-top: 6px; padding: 4px 7px; color: var(--navy); border: 1px solid var(--border-strong); border-radius: 4px; background: white; cursor: pointer; font-size: 9px; }
+.activity-recovery-action:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .assistant-card { margin-top: 9px; padding: 11px; border: 1px solid var(--border); border-radius: 6px; background: white; box-shadow: 0 2px 7px rgba(13,32,56,.04); }
 .assistant-card > header { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; color: var(--blue); }
 .assistant-card > header strong { color: var(--navy); font-size: 12px; }

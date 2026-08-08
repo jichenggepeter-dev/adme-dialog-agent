@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import AsyncIterator, Iterator
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from app.agent_runtime.contracts import (
@@ -15,6 +16,7 @@ from app.agent_runtime.contracts import (
     AgentStreamMessageDelta,
     AgentStreamResponseCompleted,
     AgentStreamToolCompleted,
+    AgentStreamToolStarted,
 )
 from app.agent_runtime.errors import AgentCoreError
 
@@ -52,9 +54,19 @@ def response_events(
     }
 
     for activity in validated.tool_activity:
+        started_at = activity.started_at or datetime.now(UTC)
+        completed_at = activity.completed_at or started_at
+        yield AgentStreamToolStarted(
+            **envelope,
+            sequence=sequence,
+            occurred_at=started_at,
+            tool_name=activity.tool_name,
+        )
+        sequence += 1
         yield AgentStreamToolCompleted(
             **envelope,
             sequence=sequence,
+            occurred_at=completed_at,
             tool_activity=activity,
         )
         sequence += 1
