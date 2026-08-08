@@ -1,0 +1,19 @@
+{
+  "query": "mass balance",
+  "collection_id": "collection_0123456789abcdef0123456789abcdef",
+  "index_version": 1,
+  "evidence_label": "user_provided",
+  "matches": [
+    {
+      "chunk_id": "user_chunk_0123456789abcdef0123",
+      "document_id": "document_0123456789abcdef0123456789abcdef",
+      "document_revision": 1,
+      "display_name": "mass-balance-notes.md",
+      "source_url": null,
+      "rights_basis": "created_by_user",
+      "position": 0,
+      "excerpt": "Mass balance studies track the administered material and its elimination.",
+      "score": 1.25
+    }
+  ]
+}

@@ -6,9 +6,9 @@ from collections.abc import Callable
 from app.agent_runtime.errors import AgentCoreError
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
-LATEST_SCHEMA = (
+AGENT_SCHEMA = (
     """CREATE TABLE agent_schema (
            version INTEGER NOT NULL
        )""",
@@ -99,6 +99,64 @@ LATEST_SCHEMA = (
        )""",
 )
 
+KNOWLEDGE_SCHEMA = (
+    """CREATE TABLE knowledge_collections (
+           collection_id TEXT PRIMARY KEY,
+           display_name TEXT NOT NULL,
+           state TEXT NOT NULL,
+           provider_access_mode TEXT NOT NULL,
+           active_index_version INTEGER NOT NULL DEFAULT 0,
+           created_at TEXT NOT NULL,
+           updated_at TEXT NOT NULL
+       )""",
+    """CREATE TABLE knowledge_documents (
+           document_id TEXT PRIMARY KEY,
+           collection_id TEXT NOT NULL REFERENCES knowledge_collections(collection_id) ON DELETE CASCADE,
+           display_name TEXT NOT NULL,
+           media_type TEXT NOT NULL,
+           size_bytes INTEGER NOT NULL,
+           normalized_bytes INTEGER NOT NULL,
+           sha256 TEXT NOT NULL,
+           revision INTEGER NOT NULL,
+           state TEXT NOT NULL,
+           rights_basis TEXT NOT NULL,
+           source_url TEXT,
+           created_at TEXT NOT NULL,
+           updated_at TEXT NOT NULL,
+           UNIQUE(collection_id, sha256)
+       )""",
+    """CREATE INDEX idx_knowledge_documents_collection
+           ON knowledge_documents(collection_id, created_at)""",
+    """CREATE TABLE knowledge_index_versions (
+           collection_id TEXT NOT NULL REFERENCES knowledge_collections(collection_id) ON DELETE CASCADE,
+           version INTEGER NOT NULL,
+           schema_version INTEGER NOT NULL,
+           source_digest TEXT NOT NULL,
+           retrieval_config_json TEXT NOT NULL,
+           created_at TEXT NOT NULL,
+           PRIMARY KEY(collection_id, version)
+       )""",
+    """CREATE TABLE knowledge_chunks (
+           collection_id TEXT NOT NULL,
+           index_version INTEGER NOT NULL,
+           chunk_id TEXT NOT NULL,
+           document_id TEXT NOT NULL,
+           document_revision INTEGER NOT NULL,
+           position INTEGER NOT NULL,
+           excerpt TEXT NOT NULL,
+           excerpt_hash TEXT NOT NULL,
+           tokens_json TEXT NOT NULL,
+           length INTEGER NOT NULL,
+           PRIMARY KEY(collection_id, index_version, chunk_id),
+           FOREIGN KEY(collection_id, index_version)
+             REFERENCES knowledge_index_versions(collection_id, version) ON DELETE CASCADE
+       )""",
+    """CREATE INDEX idx_knowledge_chunks_document
+           ON knowledge_chunks(collection_id, index_version, document_id)""",
+)
+
+LATEST_SCHEMA = AGENT_SCHEMA + KNOWLEDGE_SCHEMA
+
 
 def _migrate_v1_to_v2(connection: sqlite3.Connection) -> None:
     connection.execute(
@@ -122,10 +180,16 @@ def _migrate_v2_to_v3(connection: sqlite3.Connection) -> None:
     )
 
 
+def _migrate_v3_to_v4(connection: sqlite3.Connection) -> None:
+    for statement in KNOWLEDGE_SCHEMA:
+        connection.execute(statement)
+
+
 Migration = Callable[[sqlite3.Connection], None]
 MIGRATIONS: dict[int, Migration] = {
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
+    3: _migrate_v3_to_v4,
 }
 
 

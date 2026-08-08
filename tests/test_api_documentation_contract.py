@@ -16,6 +16,7 @@ from app.agent_runtime.contracts import (
 )
 from app.api_contract import API_CONTRACT_VERSION, STREAM_EVENT_VERSION
 from app.main import app
+from app.knowledge_contracts import KnowledgeSearchRequest, KnowledgeSearchResponse
 
 
 V1_ROOT = Path(__file__).resolve().parents[1] / "docs" / "api" / "v1"
@@ -52,6 +53,8 @@ def test_v1_examples_match_executable_models() -> None:
     StableErrorResponse.model_validate(_json(EXAMPLES / "error-response.json"))
     EvidenceCitation.model_validate(_json(EXAMPLES / "source-card.json"))
     EvidenceAnswerData.model_validate(_json(EXAMPLES / "evidence-answer.json"))
+    KnowledgeSearchRequest.model_validate(_json(EXAMPLES / "knowledge-search-request.json"))
+    KnowledgeSearchResponse.model_validate(_json(EXAMPLES / "knowledge-search-response.json"))
 
     adapter = TypeAdapter(AgentStreamEvent)
     observed_types = set()

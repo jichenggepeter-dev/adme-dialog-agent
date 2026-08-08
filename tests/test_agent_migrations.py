@@ -47,10 +47,23 @@ def test_old_schema_fixtures_upgrade_and_preserve_session_data(
         message = connection.execute(
             "SELECT content FROM agent_messages WHERE message_id = 'message_fixture'"
         ).fetchone()[0]
+        knowledge_tables = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master "
+                "WHERE type = 'table' AND name LIKE 'knowledge_%'"
+            )
+        }
 
     assert version == migrations.SCHEMA_VERSION
     assert {"version", "result_resource_id", "error_code"} <= columns
     assert deletion_table is not None
+    assert knowledge_tables == {
+        "knowledge_chunks",
+        "knowledge_collections",
+        "knowledge_documents",
+        "knowledge_index_versions",
+    }
     assert message == "preserve this message"
 
 
@@ -99,7 +112,9 @@ def test_newer_database_rejects_unsupported_downgrade(tmp_path: Path) -> None:
     path = tmp_path / "agent.sqlite3"
     AgentRepository(path)
     with sqlite3.connect(path) as connection:
-        connection.execute("UPDATE agent_schema SET version = 4")
+        connection.execute(
+            "UPDATE agent_schema SET version = ?", (migrations.SCHEMA_VERSION + 1,)
+        )
 
     with pytest.raises(AgentCoreError) as caught:
         AgentRepository(path)
