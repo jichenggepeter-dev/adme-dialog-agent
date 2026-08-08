@@ -60,6 +60,25 @@ export type ToolActivity = {
   status: "completed" | "error" | "blocked";
   error_code: string | null;
   resource_id: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  duration_ms?: number | null;
+};
+
+export type AgentActivityItem = {
+  id: string;
+  kind: "request" | "tool" | "confirmation" | "evidence" | "unknown" | "error" | "response";
+  status: "started" | "completed" | "waiting" | "supported" | "partial" | "conflicting" | "no_evidence" | "prohibited" | "stale_only" | "error" | "blocked";
+  occurred_at: string;
+  correlation_id: string;
+  sequence: number;
+  tool_name?: string;
+  error_code?: string;
+  duration_ms?: number;
+  source_title?: string;
+  source_url?: string;
+  chunk_id?: string;
+  recovery?: "edit_and_retry" | "review_error" | "review_confirmation" | "refine_question";
 };
 
 export type EvidenceCitation = {
@@ -216,6 +235,43 @@ export type SessionDeletionResult = {
   retained: string[];
 };
 
+export type SessionExportFormat = "json" | "markdown";
+
+export type SessionExportProposal = {
+  action: {
+    action_id: string;
+    session_id: string;
+    action_type: "session_export_v1";
+    status: string;
+    payload: Record<string, unknown>;
+    expected_state_version: number;
+    created_at: string;
+    expires_at: string;
+    consumed_at: string | null;
+  };
+  schema_version: "1.0";
+  included: string[];
+  excluded: string[];
+  max_export_bytes: number;
+  snapshot_taken_at: string;
+  counts: {
+    messages: number;
+    confirmations: number;
+    activities: number;
+    resources: number;
+    selected_resources: number;
+  };
+};
+
+export type SessionExportResult = {
+  status: "succeeded" | "rejected";
+  filename: string | null;
+  media_type: string | null;
+  content: string | null;
+  size_bytes: number | null;
+  schema_version: "1.0";
+};
+
 export type AgentError = {
   code: string;
   message: string;
@@ -230,6 +286,7 @@ export type AgentStreamEnvelope = {
   message_id: string;
   correlation_id: string;
   sequence: number;
+  occurred_at?: string;
 };
 
 export type AgentStreamHeartbeat = AgentStreamEnvelope & {

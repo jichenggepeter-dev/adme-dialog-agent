@@ -66,6 +66,49 @@ export const sessionDeletionResultSchema = z
   })
   .strict();
 
+export const sessionExportProposalSchema = z
+  .object({
+    action: z
+      .object({
+        action_id: z.string().min(1),
+        session_id: z.string().min(1),
+        action_type: z.literal("session_export_v1"),
+        status: pendingStatusSchema,
+        payload: z.object({}).strict(),
+        expected_state_version: z.number().int().nonnegative(),
+        created_at: z.string(),
+        expires_at: z.string(),
+        consumed_at: z.string().nullable(),
+      })
+      .strict(),
+    schema_version: z.literal("1.0"),
+    included: z.array(z.string()),
+    excluded: z.array(z.string()),
+    max_export_bytes: z.number().int().positive(),
+    snapshot_taken_at: z.string(),
+    counts: z
+      .object({
+        messages: z.number().int().nonnegative(),
+        confirmations: z.number().int().nonnegative(),
+        activities: z.number().int().nonnegative(),
+        resources: z.number().int().nonnegative(),
+        selected_resources: z.number().int().nonnegative(),
+      })
+      .strict(),
+  })
+  .strict();
+
+export const sessionExportResultSchema = z
+  .object({
+    status: z.enum(["succeeded", "rejected"]),
+    filename: z.string().nullable(),
+    media_type: z.string().nullable(),
+    content: z.string().nullable(),
+    size_bytes: z.number().int().nonnegative().nullable(),
+    schema_version: z.literal("1.0"),
+  })
+  .strict();
+
 export const messagePageSchema = z
   .object({
     messages: z.array(
@@ -347,6 +390,9 @@ export const toolActivitySchema = z
     status: z.enum(["completed", "error", "blocked"]),
     error_code: z.string().nullable(),
     resource_id: z.string().nullable(),
+    started_at: z.string().nullable().default(null),
+    completed_at: z.string().nullable().default(null),
+    duration_ms: z.number().int().nonnegative().nullable().default(null),
   })
   .strict();
 
@@ -459,6 +505,7 @@ const streamEnvelope = {
   message_id: identifier,
   correlation_id: identifier,
   sequence: z.number().int().nonnegative(),
+  occurred_at: z.string().optional(),
 };
 
 export const agentStreamEventSchema = z

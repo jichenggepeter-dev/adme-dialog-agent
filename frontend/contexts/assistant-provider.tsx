@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createAgentSession, decideConfirmation, decidePendingAction, decideSessionDeletion, getAgentSession, getPredictionResource, streamAgentMessage, AgentApiError } from "@/lib/agent-api";
-import type { AgentMessage, AgentResponse, AgentStreamEvent, AssistantStreamStatus, Confirmation, PageContext, PendingAction, SessionDeletionResult, StructuredPayload, ToolActivity } from "@/lib/agent-types";
+import type { AgentActivityItem, AgentMessage, AgentResponse, AgentStreamEvent, AssistantStreamStatus, Confirmation, PageContext, PendingAction, SessionDeletionResult, StructuredPayload, ToolActivity } from "@/lib/agent-types";
 import { applyStreamEvent, finalizeStreamedMessage } from "@/lib/assistant-stream-state";
 import { getAssistantPageContext } from "@/lib/assistant-page-state";
 import { executeUIAction, shouldCollapseForAction, type UIActionExecutionResult } from "@/lib/ui-action-dispatcher";
@@ -16,7 +16,7 @@ import {
   type MockScenarioId,
 } from "@/lib/review-mode";
 
-export type ViewMessage = AgentMessage & { payloads?: StructuredPayload[]; tools?: ToolActivity[] };
+export type ViewMessage = AgentMessage & { payloads?: StructuredPayload[]; tools?: ToolActivity[]; activity?: AgentActivityItem[]; stream_correlation_id?: string };
 type AssistantState = { open: boolean; closing: boolean; ready: boolean; loading: boolean; sessionId: string | null; messages: ViewMessage[]; pending: Confirmation | null; pendingAction: PendingAction | null; error: AgentApiError | null; stateVersion: number; streamStatus: AssistantStreamStatus; actionPhase: ActionPhase; actionResult: UIActionExecutionResult | null; guidedMode: boolean; guidedPrediction: PredictionResponse | null; mockScenario: MockScenarioId; setMockScenario: (scenario: MockScenarioId) => void; send: (text: string) => Promise<void>; cancelStream: () => void; decide: (decision: "approve" | "reject") => Promise<void>; decideAction: (decision: "approve" | "reject") => Promise<void>; deleteCurrentSession: (actionId: string) => Promise<SessionDeletionResult>; setOpen: (value: boolean) => void; exitGuidedMode: () => void; clearError: () => void };
 const Context = createContext<AssistantState | null>(null);
 

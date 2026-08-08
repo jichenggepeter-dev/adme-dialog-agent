@@ -289,14 +289,17 @@ def test_tool_failure_uses_normal_missing_prediction_error_path(
     assert response.status_code == 200
     body = response.json()
     _assert_mock_boundary(body["text"])
-    assert body["tool_activity"] == [
-        {
-            "tool_name": "get_prediction_results",
-            "status": "error",
-            "error_code": "RESOURCE_NOT_FOUND",
-            "resource_id": None,
-        }
-    ]
+    assert len(body["tool_activity"]) == 1
+    assert {
+        key: body["tool_activity"][0][key]
+        for key in ("tool_name", "status", "error_code", "resource_id")
+    } == {
+        "tool_name": "get_prediction_results",
+        "status": "error",
+        "error_code": "RESOURCE_NOT_FOUND",
+        "resource_id": None,
+    }
+    assert body["tool_activity"][0]["duration_ms"] >= 0
     assert body["structured_payloads"] == []
     assert calls == [(MISSING_PREDICTION_ID, None, None)]
 
@@ -528,9 +531,9 @@ def _assert_event_type_order(events: list[dict[str, Any]], scenario_id: str) -> 
         assert event_types == ["heartbeat", "error"]
         return
 
-    assert event_types[:2] == ["heartbeat", "tool_completed"]
+    assert event_types[:3] == ["heartbeat", "tool_started", "tool_completed"]
     assert event_types[-1] == "response_completed"
-    message_types = event_types[2:-1]
+    message_types = event_types[3:-1]
     if scenario_id == "confirmation":
         assert message_types[-1] == "confirmation_required"
         message_types = message_types[:-1]
@@ -567,6 +570,10 @@ DYNAMIC_KEYS = {
     "payload_hash",
     "created_at",
     "expires_at",
+    "occurred_at",
+    "started_at",
+    "completed_at",
+    "duration_ms",
 }
 
 

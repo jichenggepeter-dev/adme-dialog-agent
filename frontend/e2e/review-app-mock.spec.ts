@@ -15,7 +15,11 @@ test("runs the keyless Mock Agent review flow against the real local API", async
   await page.getByRole("button", { name: "Send message" }).click();
   await expect(page.getByText(/Mock Agent v1: The approved local FDA evidence corpus returned a supported, cited answer/)).toBeVisible();
   await expect(page.getByRole("region", { name: "ADME evidence answer" })).toBeVisible();
-  await expect(page.getByText("Supported", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "ADME evidence answer" })
+      .getByText("Supported", { exact: true }),
+  ).toBeVisible();
   const evidenceLinks = page.getByRole("link", { name: "M12 Drug Interaction Studies" });
   await expect(evidenceLinks).toHaveCount(2);
   await expect(evidenceLinks.first()).toHaveAttribute("href", /fda\.gov/);
