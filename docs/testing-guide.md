@@ -31,13 +31,15 @@ dependencies or `app/tools/admet_predictor.py`.
 ## Recommended workflow
 
 ```bash
-make check
+make verify
 ADME_MOCK_MODE=true make dev
 # Exercise /single, /batch, and /about at http://localhost:3000.
 ```
 
 Run `make test-unit` for Python logic and `make test-api` for FastAPI routes.
-Run `make check` for the broad local check after the frontend is installed.
+Run `make verify` for the broad local check after setup. Each stage names the
+smaller command to rerun. `make verify-container` executes the same layers in
+the pinned Docker environment.
 
 Real model verification is a separate, opt-in integration check because it can
 download or load model assets and takes substantially longer:

@@ -1,0 +1,78 @@
+name: adme-dialog-agent-dev
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    environment:
+      ADME_MOCK_MODE: "true"
+      ADME_DATA_DIR: /workspace/data
+      AGENT_DB_PATH: /workspace/data/agent.sqlite3
+      AGENT_ENABLED: "false"
+      AGENT_PROVIDER_MODE: live
+      OPENAI_AGENTS_DISABLE_TRACING: "1"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - adme-dev-data:/workspace/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /workspace/app
+        - action: sync
+          path: ./scripts
+          target: /workspace/scripts
+        - action: rebuild
+          path: ./pyproject.toml
+        - action: rebuild
+          path: ./uv.lock
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:3000/single').then((response) => { if (!response.ok) process.exit(1) }).catch(() => process.exit(1))
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /workspace/frontend
+          ignore:
+            - .next/
+            - node_modules/
+            - playwright-report/
+            - test-results/
+        - action: rebuild
+          path: ./frontend/package-lock.json
+
+volumes:
+  adme-dev-data:

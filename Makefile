@@ -1,33 +1,37 @@
-PYTHON := .venv/bin/python
-PIP := .venv/bin/pip
-PYTEST := .venv/bin/pytest
+PYTHON ?= .venv/bin/python
+UV ?= uv
+COMPOSE ?= docker compose
+VERIFY_REPORT_DIR ?= /tmp/adme-dialog-agent-verify
 BACKEND_HOST ?= 127.0.0.1
 BACKEND_PORT ?= 8000
 FRONTEND_HOST ?= 127.0.0.1
 FRONTEND_PORT ?= 3000
 
-.PHONY: setup test test-unit test-api test-agent test-agent-integration smoke-mock smoke-real smoke-agent-llm backend frontend dev batch-demo docs-check check
+.PHONY: setup dev-check test test-unit test-api test-agent test-agent-integration smoke-mock smoke-real smoke-agent-llm backend frontend dev batch-demo docs-check verify-docs verify-backend verify-frontend verify check container-up container-watch container-down container-reset verify-container
 
 setup:
-	@if [ ! -d .venv ]; then python3 -m venv .venv; else echo "Using existing .venv (not recreating it)."; fi
-	$(PIP) install -r requirements.txt
+	@command -v $(UV) >/dev/null || { echo "[FAIL] uv 0.11.32 is required. See docs/contributor-environment.md"; exit 1; }
+	$(UV) sync --locked --extra dev
 	@if [ -f frontend/package.json ]; then cd frontend && npm ci; fi
-	@echo "Setup complete. Next: export ADME_MOCK_MODE=true && make dev"
+	@echo "Setup complete. Next: make dev"
+
+dev-check:
+	ADME_MOCK_MODE=true $(PYTHON) scripts/dev_check.py
 
 test:
-	ADME_MOCK_MODE=true $(PYTEST) -v
+	ADME_MOCK_MODE=true $(PYTHON) -m pytest -v
 
 test-unit:
-	ADME_MOCK_MODE=true $(PYTEST) -v tests/test_smiles.py tests/test_formatter.py tests/test_agent.py
+	ADME_MOCK_MODE=true $(PYTHON) -m pytest -v tests/test_smiles.py tests/test_formatter.py tests/test_agent.py
 
 test-api:
-	ADME_MOCK_MODE=true $(PYTEST) -v tests/test_api.py
+	ADME_MOCK_MODE=true $(PYTHON) -m pytest -v tests/test_api.py
 
 test-agent:
-	AGENT_ENABLED=false ADME_MOCK_MODE=true $(PYTEST) -q tests/test_agent_*.py
+	AGENT_ENABLED=false ADME_MOCK_MODE=true $(PYTHON) -m pytest -q tests/test_agent_*.py
 
 test-agent-integration:
-	RUN_AGENT_LLM_INTEGRATION=true AGENT_ENABLED=true ADME_MOCK_MODE=true $(PYTEST) -q tests/integration -s
+	RUN_AGENT_LLM_INTEGRATION=true AGENT_ENABLED=true ADME_MOCK_MODE=true $(PYTHON) -m pytest -q tests/integration -s
 
 smoke-mock:
 	ADME_MOCK_MODE=true $(PYTHON) -c "from app.tools.admet_predictor import predict_one; print(predict_one('CC(=O)OC1=CC=CC=C1C(=O)O'))"
@@ -53,8 +57,38 @@ batch-demo:
 docs-check:
 	$(PYTHON) scripts/check_markdown_links.py
 
-check:
+verify-docs:
+	@echo "==> Documentation links (retry: make verify-docs)"
 	$(MAKE) docs-check
-	$(PYTHON) scripts/dev_check.py
-	$(MAKE) test
-	@if [ -f frontend/package.json ]; then cd frontend && npm run lint && npm run typecheck && npm run test && npm run build; fi
+
+verify-backend:
+	@echo "==> Backend tests (retry: make verify-backend)"
+	ADME_MOCK_MODE=true AGENT_ENABLED=false RUN_AGENT_LLM_INTEGRATION=0 OPENAI_AGENTS_DISABLE_TRACING=1 $(PYTHON) -m pytest -q
+	@echo "==> Deterministic Agent evaluation (retry: make verify-backend)"
+	@mkdir -p "$(VERIFY_REPORT_DIR)"
+	ADME_MOCK_MODE=true AGENT_ENABLED=false OPENAI_AGENTS_DISABLE_TRACING=1 $(PYTHON) scripts/evaluate_agent.py --mode deterministic_rules --mode mock_provider --json-output "$(VERIFY_REPORT_DIR)/agent-eval.json" --markdown-output "$(VERIFY_REPORT_DIR)/agent-eval.md"
+
+verify-frontend:
+	@echo "==> Frontend gate (retry: make verify-frontend)"
+	cd frontend && npm run verify
+
+verify: verify-docs verify-backend verify-frontend
+
+check: verify
+
+container-up:
+	$(COMPOSE) up --build
+
+container-watch:
+	$(COMPOSE) watch
+
+container-down:
+	$(COMPOSE) down
+
+container-reset:
+	$(COMPOSE) down --volumes --remove-orphans
+
+verify-container:
+	$(COMPOSE) build
+	$(COMPOSE) run --rm --no-deps backend make PYTHON=python verify-docs verify-backend
+	$(COMPOSE) run --rm --no-deps frontend npm run verify

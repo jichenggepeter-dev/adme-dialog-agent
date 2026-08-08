@@ -47,6 +47,15 @@ The direct frontend development packages are MIT-licensed except Playwright
 `@axe-core/playwright` 4.12.1, which declares MPL-2.0. Exact resolved versions
 and all transitive packages are recorded in `frontend/package-lock.json`.
 
+## Contributor tooling
+
+The reproducible contributor environment uses uv 0.11.32, which is available
+under the Apache-2.0 or MIT licenses, plus the official Python 3.11.15 Bookworm
+and Node.js 22.23.1 Bookworm Slim container images. Those images and their
+operating-system packages are fetched from their upstream registries; they are
+not relicensed by this repository. Review their image-level notices before
+redistributing a built container rather than this source repository.
+
 ## ADMET-AI models and reference data
 
 - Project: <https://github.com/swansonk14/admet_ai>

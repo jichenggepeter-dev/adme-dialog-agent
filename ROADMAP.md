@@ -44,12 +44,12 @@ giving up control.
 
 Goal: contributors can reproduce and extend the system efficiently.
 
-- Containerized or equivalent reproducible development environment.
-- Improved onboarding and example workflows.
-- Public API documentation and migration guidance.
-- Database schema migration tooling.
-- One-command contributor verification.
-- First structured external usability study.
+- [x] Containerized or equivalent reproducible development environment.
+- [ ] Improved onboarding and example workflows.
+- [ ] Public API documentation and migration guidance.
+- [ ] Database schema migration tooling.
+- [x] One-command contributor verification.
+- [ ] First structured external usability study.
 
 ## v1.0: Stable research tool
 

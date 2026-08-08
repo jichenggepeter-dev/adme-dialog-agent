@@ -90,16 +90,26 @@ for scientific interpretation and every downstream decision.
 
 ## Quick start
 
-Prerequisites:
+The most reproducible path requires Docker Desktop or Docker Engine with
+Compose 2.22 or newer:
 
-- Python 3.11 or newer
-- Node.js 20.9 or newer
+```bash
+docker compose up --build
+```
+
+This starts the whole application in deterministic Mock Mode without an API
+key. For native development, use the pinned contributor toolchain:
+
+- uv 0.11.32
+- Python 3.11.15 (read from `.python-version`)
+- Node.js 22.23.1 (read from `.nvmrc`)
 - npm
 
 Check the versions before installing:
 
 ```bash
-python3 --version
+uv --version
+uv run python --version
 node --version
 npm --version
 ```
@@ -107,19 +117,13 @@ npm --version
 ```bash
 # After cloning the repository:
 cd adme-dialog-agent
-cp .env.example .env
 make setup
-export ADME_MOCK_MODE=true
 make dev
 ```
 
-If `python3 --version` is below 3.11 but a newer interpreter is installed,
-create the virtual environment with it before `make setup`, for example:
-
-```bash
-python3.13 -m venv .venv
-make setup
-```
+See the [reproducible contributor environment](docs/contributor-environment.md)
+for Docker and native cold starts, incremental workflows, supported platforms,
+and disposable data handling.
 
 Open:
 
@@ -128,8 +132,8 @@ Open:
 - Model information: `http://localhost:3000/about`
 - Backend API docs: `http://127.0.0.1:8000/docs`
 
-The default `.env.example` keeps the Agent disabled and uses mock predictions,
-so the first run does not need a model-provider API key.
+The Docker environment and `.env.example` both keep the Agent disabled and use
+mock predictions, so the first run does not need a model-provider API key.
 
 ## Architecture
 
@@ -182,13 +186,15 @@ Mock mode returns deterministic sample fields such as `Caco2_Wang`, `HIA_Hou`, `
 ## Run Tests
 
 ```bash
-make test
-cd frontend
-npm run lint
-npm run typecheck
-npm run test
-npm run build
-npm run test:e2e
+make verify
+```
+
+The default gate covers documentation, backend, deterministic Agent, frontend,
+and production-build checks. Browser E2E and real-model checks remain separate:
+
+```bash
+cd frontend && npm run test:e2e
+make smoke-real
 ```
 
 ## Batch Screening
@@ -318,11 +324,14 @@ make smoke-real  run one real ADMET-AI prediction
 make backend     start FastAPI on port 8000
 make frontend    start Next.js on port 3000
 make dev         start and stop both services together
-make check       run environment, backend, and frontend checks
+make verify      run the default documentation, backend, Agent, and frontend gate
+make check       compatibility alias for make verify
+make container-up     build and start the pinned Compose environment
+make container-watch  start Compose with incremental source synchronization
+make verify-container run the default gate in pinned containers
 ```
 
-Run `.venv/bin/python scripts/dev_check.py` for a beginner-readable environment
-and port report.
+Run `make dev-check` for a beginner-readable environment and port report.
 
 ## API Examples
 
@@ -399,8 +408,10 @@ have reviewed that provider's privacy and retention terms. See
 
 ## Troubleshooting
 
-- **Virtual environment not active:** prefer `make` commands, which call
-  `.venv/bin/python` directly, or run `source .venv/bin/activate`.
+- **uv version mismatch:** install uv 0.11.32; `pyproject.toml` intentionally
+  rejects other uv versions so lockfile behavior is reproducible.
+- **Virtual environment missing:** run `make setup`; uv creates `.venv` from
+  the committed Python and dependency locks.
 - **Port already in use:** either stop the service using port 3000 or 8000, or
   run `ADME_MOCK_MODE=true BACKEND_PORT=8100 FRONTEND_PORT=3100 make dev`.
 - **Backend unavailable:** run `make backend`, then check `/status`.
@@ -411,7 +422,8 @@ have reviewed that provider's privacy and retention terms. See
   in the terminal.
 - **First prediction slow:** real mode loads model assets on first use; wait for
   the request rather than submitting again.
-- **Node version mismatch:** Next.js 16 requires Node 20.9 or newer.
+- **Node version mismatch:** use Node 22.23.1, the version pinned for local,
+  container, and CI workflows.
 - **Frontend environment missing:** copy `frontend/.env.example` to
   `frontend/.env.local` when using a non-default backend URL.
 - **Mock mode unexpectedly active:** set `ADME_MOCK_MODE=false` in `.env` or
