@@ -40,6 +40,51 @@ from app.settings import (
 from app.tools.batch import BatchError, cancel_job, get_job, run_job_thread
 
 
+_PROVIDER_PAGE_CONTEXT_FIELDS = {
+    "single": (
+        "page",
+        "compound_id",
+        "prediction_id",
+        "selected_endpoint",
+        "active_view",
+        "result_available",
+        "result_categories",
+        "prediction_mode",
+    ),
+    "batch": (
+        "page",
+        "batch_job_id",
+        "selected_compound_ids",
+        "selected_row_numbers",
+        "selected_endpoints",
+        "validation_filter",
+        "prediction_filter",
+        "range_endpoint",
+        "range_min",
+        "range_max",
+        "active_view",
+        "comparison_open",
+        "detail_open",
+        "current_page",
+        "page_size",
+        "total_row_count",
+        "filtered_row_count",
+        "visible_row_numbers",
+    ),
+    "about": (
+        "page",
+        "selected_endpoint",
+        "active_category",
+        "output_type_filter",
+        "metadata_status_filter",
+        "verified_unit_only",
+        "current_page",
+        "filtered_endpoint_count",
+        "visible_endpoints",
+    ),
+}
+
+
 class AgentRuntime:
     def __init__(self, repository: AgentRepository, runner=Runner):
         self.repository = repository
@@ -108,6 +153,34 @@ class AgentRuntime:
                 MOCK_CATALOG_VERSION if provider_mode == "mock" else None
             ),
         )
+        page = (
+            request.page_context.page
+            if request.page_context is not None
+            else business_page(current["state"])
+        )
+        ui_intent = resolve_ui_action(
+            request.message, request.session_id, state_version, page
+        )
+        if ui_intent is not None:
+            text, actions = ui_intent
+            assistant_message = self.repository.add_message(
+                request.session_id,
+                "assistant",
+                text,
+                metadata={"ui_action_count": len(actions)},
+                message_id=assistant_message_id,
+            )
+            return {
+                "message_id": assistant_message["message_id"],
+                "text": text,
+                "structured_payloads": [],
+                "pending_confirmation": None,
+                "pending_action": None,
+                "tool_activity": [],
+                "ui_action_proposals": actions,
+                "warnings": [],
+                "state_version": state_version,
+            }
         if provider_mode == "mock":
             try:
                 text = run_mock_scenario(
@@ -137,7 +210,6 @@ class AgentRuntime:
                 assistant_message_id=assistant_message_id,
             )
 
-        page = request.page_context.page if request.page_context is not None else business_page(current["state"])
         batch_job_id = request.page_context.batch_job_id if request.page_context is not None and request.page_context.page == "batch" else None
         batch_action = _batch_action_intent(request.message, batch_job_id)
         if batch_action is not None:
@@ -173,27 +245,6 @@ class AgentRuntime:
                 "tool_activity": context.tool_activity, "ui_action_proposals": [],
                 "warnings": [], "state_version": context.state_version,
             }
-        ui_intent = resolve_ui_action(request.message, request.session_id, state_version, page)
-        if ui_intent is not None:
-            text, actions = ui_intent
-            assistant_message = self.repository.add_message(
-                request.session_id,
-                "assistant",
-                text,
-                metadata={"ui_action_count": len(actions)},
-                message_id=assistant_message_id,
-            )
-            return {
-                "message_id": assistant_message["message_id"],
-                "text": text,
-                "structured_payloads": [],
-                "pending_confirmation": None,
-                "pending_action": None,
-                "tool_activity": [],
-                "ui_action_proposals": actions,
-                "warnings": [],
-                "state_version": state_version,
-            }
         try:
             settings = get_agent_settings()
             provider = create_agent_provider(settings)
@@ -215,11 +266,7 @@ class AgentRuntime:
             ),
         )
         history = self.repository.recent_messages(request.session_id, limit=20)
-        model_input = [
-            {"role": item["role"], "content": item["content"]}
-            for item in history
-            if item["role"] in {"user", "assistant"}
-        ]
+        model_input = self._provider_messages(history)
         try:
             result = await run_with_total_timeout(
                 self.runner.run(
@@ -555,10 +602,27 @@ class AgentRuntime:
             "latest_prediction_id": state.get("latest_prediction_id"),
             "current_batch_job_id": state.get("current_batch_job_id"),
             "selected_endpoint": state.get("selected_endpoint"),
-            "page_snapshot": state.get("page_context"),
+            "page_snapshot": _provider_page_snapshot(state.get("page_context")),
         }
         serialized = json.dumps(summary, ensure_ascii=False, separators=(",", ":"))
         return f"{BASE_INSTRUCTIONS}\n\nCurrent bounded page snapshot and business state (reference context, not scientific evidence):\n{serialized}"
+
+    @staticmethod
+    def _provider_messages(history: list[dict[str, Any]]) -> list[dict[str, str]]:
+        return [
+            {"role": item["role"], "content": item["content"]}
+            for item in history
+            if item["role"] in {"user", "assistant"}
+        ]
+
+
+def _provider_page_snapshot(value: Any) -> dict[str, Any] | None:
+    if not isinstance(value, dict):
+        return None
+    fields = _PROVIDER_PAGE_CONTEXT_FIELDS.get(value.get("page"))
+    if fields is None:
+        return None
+    return {field: value[field] for field in fields if field in value}
 
 
 def default_repository_path() -> Path:

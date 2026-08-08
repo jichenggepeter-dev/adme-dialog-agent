@@ -286,6 +286,51 @@ def test_page_context_accepts_bounded_view_snapshots() -> None:
     assert request.page_context.selected_row_numbers == [6, 10]
 
 
+def test_provider_context_uses_a_page_snapshot_allowlist() -> None:
+    instructions = AgentRuntime._instructions_with_state(
+        {
+            "current_page": "batch",
+            "current_batch_job_id": "job_visible_123",
+            "page_context": {
+                "page": "batch",
+                "batch_job_id": "job_visible_123",
+                "selected_row_numbers": [6, 10],
+                "selected_endpoints": ["HIA_Hou"],
+                "active_view": "comparison",
+                "upload_filename": "private-compounds.csv",
+                "upload_path": "/private/tmp/private-compounds.csv",
+                "rows": [{"smiles": ASPIRIN, "subject": "private"}],
+            },
+            "uploaded_rows": [{"smiles": ASPIRIN}],
+        }
+    )
+
+    assert "job_visible_123" in instructions
+    assert '"selected_row_numbers":[6,10]' in instructions
+    assert "private-compounds.csv" not in instructions
+    assert "/private/tmp" not in instructions
+    assert ASPIRIN not in instructions
+    assert "uploaded_rows" not in instructions
+
+
+def test_provider_message_input_excludes_internal_message_fields() -> None:
+    history = [
+        {
+            "role": "user",
+            "content": "Explain the current Batch status.",
+            "metadata": {"authorization": "Bearer private-token"},
+            "message_id": "message_private",
+        },
+        {"role": "tool", "content": "complete private tool payload"},
+        {"role": "assistant", "content": "I will inspect the bounded state."},
+    ]
+
+    assert AgentRuntime._provider_messages(history) == [
+        {"role": "user", "content": "Explain the current Batch status."},
+        {"role": "assistant", "content": "I will inspect the bounded state."},
+    ]
+
+
 def test_local_audit_redacts_sensitive_and_hashes_scientific_input() -> None:
     redacted = _redact_summary(
         {
@@ -294,9 +339,14 @@ def test_local_audit_redacts_sensitive_and_hashes_scientific_input() -> None:
             "full_prompt": "hidden",
             "smiles": ASPIRIN,
             "tool_names": ["resolve_compound"],
+            "note": "Authorization: Bearer value-secret",
+            "callback": "https://example.test/callback?api_key=query-secret",
+            "nested": {"access_token": "nested-secret"},
         }
     )
-    assert "secret" not in str(redacted)
+    serialized = str(redacted).lower()
+    assert "secret" not in serialized
+    assert "bearer" not in serialized
     assert "smiles_hash" in redacted
     assert redacted["tool_names_count"] == 1
 
