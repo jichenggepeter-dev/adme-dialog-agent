@@ -32,6 +32,7 @@ remain the executable source of truth when a document is accidentally stale.
 - [Endpoint metadata provenance](endpoint-metadata-provenance.md)
 - [Computational summary rules](computational-summary-rules.md)
 - [ADME evidence RAG](evidence-rag.md)
+- [User-managed document collections and data lifecycle](rag/user-document-lifecycle.md)
 - [Keyless PR Review App](review-app.md)
 - [Accessibility testing](accessibility-testing.md)
 - [Course demonstration guide](course-demonstration-guide.md)
