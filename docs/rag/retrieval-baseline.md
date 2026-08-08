@@ -89,5 +89,5 @@ offline behavior, migration needs, and deletion behavior. A small score increase
 does not automatically justify a new database or model runtime.
 
 The completed [hybrid retrieval study](hybrid-retrieval-study.md) applies this
-gate. It finds a promising metadata-only direction but does not approve a dense
-or hybrid method for production.
+gate. Metadata-aware lexical ranking passes the experimental quality gate; dense
+and hybrid methods do not. No vector method is approved for production.

@@ -10,7 +10,7 @@ This is a fixed-corpus research comparison for Issue #26. It is not a production
 - Model license: `Apache-2.0`
 - Cached model bytes: `91578367`
 - Offline replay: `True`
-- Model load: `132.54` ms; nine-passage index build: `434.86` ms
+- Model load: `161.95` ms; nine-passage index build: `299.53` ms
 - Dense threshold: `0.35`; RRF k: `60`
 - Production dependency change: none; the model stack is an optional research extra
 
@@ -18,11 +18,11 @@ This is a fixed-corpus research comparison for Issue #26. It is not a production
 
 | Method | Recall@1 | Recall@3 | MRR | Hard negatives | Median ms | p95 ms | Quality gate |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| lexical | 0.647 | 0.706 | 0.676 | 1.000 | 0.0275 | 0.0763 | fail |
-| metadata_lexical | 0.706 | 0.824 | 0.765 | 1.000 | 0.0574 | 0.0781 | fail |
-| dense | 0.706 | 0.765 | 0.735 | 0.750 | 5.1484 | 7.0405 | fail |
-| hybrid_rrf | 0.765 | 0.765 | 0.765 | 0.750 | 4.4692 | 4.918 | fail |
-| hybrid_metadata_rrf | 0.765 | 0.824 | 0.794 | 0.750 | 4.5294 | 5.064 | fail |
+| lexical | 0.647 | 0.706 | 0.676 | 1.000 | 0.0275 | 0.0693 | fail |
+| metadata_lexical | 0.765 | 0.824 | 0.794 | 1.000 | 0.0589 | 0.0737 | pass |
+| dense | 0.765 | 0.765 | 0.765 | 0.750 | 5.4002 | 6.2362 | fail |
+| hybrid_rrf | 0.765 | 0.765 | 0.765 | 0.750 | 4.5337 | 4.9073 | fail |
+| hybrid_metadata_rrf | 0.824 | 0.824 | 0.824 | 0.750 | 4.5636 | 5.2805 | fail |
 
 The quality gate requires Recall@3 and MRR to improve overall, hard-negative accuracy to remain 1.0, and no relevant query category to regress on Recall@3 or MRR. Passing this table is necessary but not sufficient for production adoption.
 
