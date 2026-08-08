@@ -4,7 +4,7 @@ ADME Dialog Agent follows a trust-first roadmap. Versions advance when a
 specific user and contributor outcome is met, not when a feature count is
 reached.
 
-## v0.1.0: Research Preview baseline
+## v0.1.0: Research Preview baseline — released 2026-08-08
 
 Goal: another person can safely understand, install, test, and contribute to
 the project.
@@ -16,10 +16,13 @@ the project.
 - [x] Add GitHub Actions for mock backend and frontend checks.
 - [x] Verify setup from a clean clone on a second environment.
 - [x] Complete a pre-publication secret and asset-rights review.
-- [ ] Add a safe, deterministic streaming Assistant flow.
-- [ ] Add a small evidence RAG flow with visible source citations.
-- [ ] Complete the product-design review and course demonstration evidence.
-- [ ] Publish the initial baseline with an honest release date.
+- [x] Add a safe, deterministic streaming Assistant flow.
+- [x] Add a small evidence RAG flow with visible source citations.
+- [x] Complete the product-design review and course demonstration evidence.
+- [x] Publish the initial baseline with an honest release date.
+
+The release evidence and limitations are recorded in the
+[v0.1.0 Research Preview notes](docs/release/v0.1.0-research-preview.md).
 
 The [detailed roadmap](docs/roadmap-detailed-requirements.md) defines the scope,
 non-goals, acceptance criteria, and post-deadline ideas behind these milestones.
@@ -29,13 +32,13 @@ non-goals, acceptance criteria, and post-deadline ideas behind these milestones.
 Goal: users can exercise, evaluate, export, and delete Agent state without
 giving up control.
 
-- Deterministic mock Agent provider for no-key development.
-- Conversation and session export.
-- Conversation and session deletion.
-- Reproducible Agent evaluation dataset and runner.
-- Confirmation, scientific-language, and provider-failure evaluations.
-- Automated accessibility checks.
-- Privacy and safety regression coverage.
+- [x] Deterministic mock Agent provider for no-key development.
+- [x] Conversation and session export.
+- [x] Conversation and session deletion.
+- [ ] Reproducible Agent evaluation dataset and runner.
+- [ ] Confirmation, scientific-language, and provider-failure evaluations.
+- [ ] Automated accessibility checks.
+- [x] Privacy and safety regression coverage.
 
 ## v0.3.0: Contributor experience
 

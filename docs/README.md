@@ -42,6 +42,8 @@ remain the executable source of truth when a document is accidentally stale.
 
 ## Current release and maintenance evidence
 
+- [v0.1.0 Research Preview release notes — 2026-08-08](release/v0.1.0-research-preview.md)
+- [Clean-clone release verification — 2026-08-08](release/clean-clone-verification-2026-08-08.md)
 - [Frontend dependency security](frontend-dependency-security.md)
 - [Clean-clone verification — 2026-08-02](release/clean-clone-verification-2026-08-02.md)
 - [Pre-release security and rights review — 2026-08-02](release/pre-release-review-2026-08-02.md)
