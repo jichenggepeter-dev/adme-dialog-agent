@@ -7,7 +7,7 @@ BACKEND_PORT ?= 8000
 FRONTEND_HOST ?= 127.0.0.1
 FRONTEND_PORT ?= 3000
 
-.PHONY: setup dev-check test test-unit test-api test-agent test-agent-integration smoke-mock smoke-real smoke-agent-llm backend frontend dev batch-demo onboarding evaluate-rag-baseline docs-check verify-docs verify-backend verify-frontend verify check container-up container-watch container-down container-reset verify-container
+.PHONY: setup dev-check test test-unit test-api test-agent test-agent-integration smoke-mock smoke-real smoke-agent-llm backend frontend dev batch-demo onboarding evaluate-rag-baseline evaluate-rag-hybrid docs-check verify-docs verify-backend verify-frontend verify check container-up container-watch container-down container-reset verify-container
 
 setup:
 	@command -v $(UV) >/dev/null || { echo "[FAIL] uv 0.11.32 is required. See docs/contributor-environment.md"; exit 1; }
@@ -62,6 +62,9 @@ onboarding:
 
 evaluate-rag-baseline:
 	$(PYTHON) scripts/evaluate_evidence_retrieval.py
+
+evaluate-rag-hybrid:
+	$(UV) run --extra rag-research python scripts/evaluate_hybrid_retrieval.py
 
 docs-check:
 	$(PYTHON) scripts/check_markdown_links.py

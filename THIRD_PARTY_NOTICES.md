@@ -31,6 +31,24 @@ environment rather than this source repository.
 Development packages reviewed include pytest 9.1.1 (MIT) and httpx2 2.9.1
 (BSD-3-Clause).
 
+## Optional retrieval research
+
+The `rag-research` optional dependency group pins Sentence Transformers 5.6.1
+(Apache-2.0) for the reproducible Issue #26 experiment. It is not installed by
+the default setup, imported by the application, or required by CI. Its locked
+research stack includes Transformers, Hugging Face Hub, Tokenizers, and
+Safetensors; exact versions and hashes are recorded in `uv.lock`.
+
+The experiment downloads `sentence-transformers/all-MiniLM-L6-v2` at revision
+`826711e54e001c83835913827a843d8dd0a1def9`. That model revision declares
+Apache-2.0. The approximately 92 MB cached artifact is not committed to this
+repository and is not relicensed under the repository's MIT license. Review the
+model card, license, and upstream training-data disclosures again before any
+redistribution or production adoption:
+
+- <https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2>
+- <https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/blob/826711e54e001c83835913827a843d8dd0a1def9/LICENSE>
+
 ## Frontend runtime
 
 | Component | Reviewed version | Declared license |
