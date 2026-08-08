@@ -1,5 +1,9 @@
 # Backend Agent API
 
+This document explains Agent behavior. The canonical route, request, response,
+stream, error, evidence, and confirmation schemas are published in the
+[versioned API contract v1](../api/v1/README.md).
+
 All routes live under `/agent`. The primary browser chat path is a versioned
 NDJSON response stream; the non-streaming chat response remains available.
 Errors use the existing stable envelope:

@@ -20,6 +20,8 @@ These documents describe intended current behavior. Code, schemas, and tests
 remain the executable source of truth when a document is accidentally stale.
 
 - [Frontend product specification](frontend-product-spec.md)
+- [Versioned API contract v1](api/v1/README.md)
+- [API change and migration policy](api/versioning-and-migrations.md)
 - [Batch product specification](v2-batch-product-spec.md)
 - [Batch file format](batch-file-format.md)
 - [Batch job architecture](batch-job-architecture.md)

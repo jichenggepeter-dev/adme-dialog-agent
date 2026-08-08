@@ -1,0 +1,6 @@
+{
+  "session_id": "session_example",
+  "confirmation_id": "confirm_example",
+  "decision": "approve",
+  "expected_state_version": 1
+}

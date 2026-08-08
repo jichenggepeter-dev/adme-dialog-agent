@@ -5,6 +5,8 @@ from typing import Any, Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.api_contract import STREAM_EVENT_VERSION
+
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -666,7 +668,7 @@ class AgentChatResponse(StrictModel):
 
 
 class AgentStreamEnvelope(StrictModel):
-    version: Literal[1] = 1
+    version: Literal[1] = STREAM_EVENT_VERSION
     session_id: str = Field(min_length=1, max_length=128)
     message_id: str = Field(min_length=1, max_length=128)
     correlation_id: str = Field(min_length=1, max_length=128)

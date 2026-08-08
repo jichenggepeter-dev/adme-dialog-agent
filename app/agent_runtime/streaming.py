@@ -19,6 +19,7 @@ from app.agent_runtime.contracts import (
     AgentStreamToolStarted,
 )
 from app.agent_runtime.errors import AgentCoreError
+from app.api_contract import STREAM_EVENT_VERSION
 
 if TYPE_CHECKING:
     from app.agent_runtime.runtime import AgentRuntime
@@ -47,7 +48,7 @@ def response_events(
     validated = AgentChatResponse.model_validate(response)
     sequence = start_sequence
     envelope = {
-        "version": 1,
+        "version": STREAM_EVENT_VERSION,
         "session_id": session_id,
         "message_id": message_id,
         "correlation_id": correlation_id,
@@ -113,7 +114,7 @@ async def stream_agent_chat(
     correlation_id: str,
 ) -> AsyncIterator[bytes]:
     envelope = {
-        "version": 1,
+        "version": STREAM_EVENT_VERSION,
         "session_id": request.session_id,
         "message_id": message_id,
         "correlation_id": correlation_id,

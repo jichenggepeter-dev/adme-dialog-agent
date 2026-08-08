@@ -1,0 +1,9 @@
+{
+  "session_id": "session_example",
+  "message": "Explain the available FDA evidence about transporter interactions.",
+  "expected_state_version": 0,
+  "page_context": {
+    "page": "about",
+    "search_query": "transporter"
+  }
+}

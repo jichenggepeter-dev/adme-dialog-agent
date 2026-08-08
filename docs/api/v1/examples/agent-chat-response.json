@@ -1,0 +1,11 @@
+{
+  "message_id": "msg_example",
+  "text": "I found bounded evidence in the local FDA corpus.",
+  "structured_payloads": [],
+  "pending_confirmation": null,
+  "pending_action": null,
+  "tool_activity": [],
+  "ui_action_proposals": [],
+  "warnings": [],
+  "state_version": 1
+}
