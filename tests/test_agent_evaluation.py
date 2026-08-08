@@ -13,7 +13,7 @@ DETERMINISTIC_MODES = {"deterministic_rules", "mock_provider"}
 def test_agent_evaluation_dataset_is_versioned_and_complete() -> None:
     dataset = load_dataset(DATASET)
 
-    assert dataset.schema_version == "1.0"
+    assert dataset.schema_version == "1.1"
     assert {case.execution_mode for case in dataset.cases} == {
         "deterministic_rules",
         "mock_provider",
@@ -36,11 +36,17 @@ def test_deterministic_agent_evaluation_passes_and_writes_both_reports(
 
     write_reports(report, json_path, markdown_path)
 
-    assert report["summary"]["selected"] == 8
-    assert report["summary"]["passed"] == 8
+    assert report["summary"]["selected"] == 19
+    assert report["summary"]["passed"] == 19
     assert report["summary"]["failed"] == 0
-    assert json.loads(json_path.read_text())["report_schema_version"] == "1.0"
-    assert "8 passed, 0 failed" in markdown_path.read_text()
+    assert len(report["summary"]["quality_metrics"]) == 8
+    assert all(
+        metric["passed"]
+        for metric in report["summary"]["quality_metrics"].values()
+    )
+    assert json.loads(json_path.read_text())["report_schema_version"] == "1.1"
+    assert "19 passed, 0 failed" in markdown_path.read_text()
+    assert "Required confirmation compliance | 100% | 100%" in markdown_path.read_text()
 
 
 def test_agent_evaluation_category_filter_runs_independently() -> None:

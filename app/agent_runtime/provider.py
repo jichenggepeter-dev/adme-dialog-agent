@@ -7,13 +7,14 @@ from dataclasses import dataclass
 from typing import Awaitable, TypeVar
 
 import httpx
-from agents import OpenAIResponsesModel, set_tracing_disabled
+from agents import ModelBehaviorError, OpenAIResponsesModel, set_tracing_disabled
 from openai import (
     APIConnectionError,
     APIStatusError,
     APITimeoutError,
     AsyncOpenAI,
     AuthenticationError,
+    RateLimitError,
 )
 
 from app.settings import AgentSettings, AgentSettingsError
@@ -77,6 +78,10 @@ def map_provider_error(exc: Exception) -> AgentProviderError:
             "AGENT_AUTHENTICATION_FAILED",
             "The local Agent model rejected its credentials.",
         )
+    if isinstance(exc, RateLimitError):
+        return AgentProviderError(
+            "AGENT_RATE_LIMITED", "The local Agent model is rate limited."
+        )
     if isinstance(exc, APIConnectionError):
         return AgentProviderError(
             "AGENT_PROVIDER_UNAVAILABLE", "The local Agent model is unavailable."
@@ -87,6 +92,11 @@ def map_provider_error(exc: Exception) -> AgentProviderError:
         )
     if isinstance(exc, AgentProviderError):
         return exc
+    if isinstance(exc, ModelBehaviorError):
+        return AgentProviderError(
+            "AGENT_PROVIDER_INVALID_RESPONSE",
+            "The local Agent model returned an invalid response.",
+        )
     return AgentProviderError(
         "AGENT_PROVIDER_ERROR", "The local Agent model request failed."
     )

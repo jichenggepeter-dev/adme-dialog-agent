@@ -85,6 +85,7 @@ def test_cross_session_and_expired_session_cannot_read_resources_or_messages(tmp
     "This is a real ADMET-AI output.",
     "The result was experimentally measured.",
     "This is the safer and better compound.",
+    "This compound is FDA approved for use.",
     "The predicted risk is 67%.",
     "Clearance is 12 mg/kg.",
 ])

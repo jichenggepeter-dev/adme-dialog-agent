@@ -36,7 +36,7 @@ giving up control.
 - [x] Conversation and session export.
 - [x] Conversation and session deletion.
 - [x] Reproducible Agent evaluation dataset and runner.
-- [ ] Confirmation, scientific-language, and provider-failure evaluations.
+- [x] Confirmation, scientific-language, and provider-failure evaluations.
 - [ ] Automated accessibility checks.
 - [x] Privacy and safety regression coverage.
 
