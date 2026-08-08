@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "single": {
+    "route": "/single",
+    "query": "CCO",
+    "expected": {
+      "preferred_name": "Resolved SMILES compound",
+      "molecular_formula": "C2H6O",
+      "canonical_smiles": "CCO",
+      "prediction_mode": "mock",
+      "prediction_category": "absorption"
+    }
+  },
+  "batch": {
+    "route": "/batch",
+    "file": "examples/batch/sample_mixed.csv",
+    "mapping": {
+      "smiles": "smiles",
+      "compound_id": "compound_id",
+      "compound_name": "compound_name"
+    },
+    "expected_summary": {
+      "total_rows": 5,
+      "valid_molecules": 3,
+      "invalid_smiles": 1,
+      "missing_smiles": 1,
+      "duplicate_molecules": 1,
+      "unique_valid_molecules": 2
+    },
+    "expected_final_status": "completed"
+  },
+  "assistant": {
+    "route": "/single",
+    "catalog_version": 1,
+    "scenario_id": "confirmation",
+    "message": "Show the fixed structure-confirmation workflow.",
+    "expected": {
+      "canonical_smiles": "CCO",
+      "status_before_decision": "awaiting_confirmation",
+      "prediction_before_decision": false,
+      "prediction_mode_after_approval": "mock"
+    }
+  },
+  "evidence": {
+    "route": "/single",
+    "catalog_version": 1,
+    "scenario_id": "success",
+    "query": "What does M12 say about drug interactions?",
+    "expected": {
+      "status": "supported",
+      "source_id": "fda-m12-2024",
+      "source_title": "M12 Drug Interaction Studies"
+    }
+  }
+}

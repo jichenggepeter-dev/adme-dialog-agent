@@ -97,6 +97,12 @@ jobs:
           python -c "import json, urllib.request; status = json.load(urllib.request.urlopen('http://127.0.0.1:8000/status')); assert status['prediction_mode'] == 'mock'"
           curl --fail --silent --show-error http://127.0.0.1:3000/single >/dev/null
 
+      - name: Start and verify the no-key onboarding workspace
+        run: |
+          docker compose down --volumes --remove-orphans
+          make onboarding
+          python -c "import json, urllib.request; request = urllib.request.Request('http://127.0.0.1:8000/agent/sessions', data=b'', method='POST'); session = json.load(urllib.request.urlopen(request)); assert session['session_id'].startswith('session_')"
+
       - name: Stop the disposable environment
         if: always()
         run: docker compose down --volumes --remove-orphans

@@ -7,7 +7,7 @@ BACKEND_PORT ?= 8000
 FRONTEND_HOST ?= 127.0.0.1
 FRONTEND_PORT ?= 3000
 
-.PHONY: setup dev-check test test-unit test-api test-agent test-agent-integration smoke-mock smoke-real smoke-agent-llm backend frontend dev batch-demo docs-check verify-docs verify-backend verify-frontend verify check container-up container-watch container-down container-reset verify-container
+.PHONY: setup dev-check test test-unit test-api test-agent test-agent-integration smoke-mock smoke-real smoke-agent-llm backend frontend dev batch-demo onboarding docs-check verify-docs verify-backend verify-frontend verify check container-up container-watch container-down container-reset verify-container
 
 setup:
 	@command -v $(UV) >/dev/null || { echo "[FAIL] uv 0.11.32 is required. See docs/contributor-environment.md"; exit 1; }
@@ -53,6 +53,12 @@ dev:
 
 batch-demo:
 	ADME_MOCK_MODE=true $(PYTHON) scripts/batch_demo.py
+
+onboarding:
+	ADME_MOCK_MODE=true AGENT_ENABLED=true AGENT_PROVIDER_MODE=mock \
+		NEXT_PUBLIC_AGENT_PROVIDER_MODE=mock NEXT_PUBLIC_REVIEW_MODE=false \
+		$(COMPOSE) up --build --wait
+	@echo "Onboarding workspace: http://127.0.0.1:3000/single"
 
 docs-check:
 	$(PYTHON) scripts/check_markdown_links.py

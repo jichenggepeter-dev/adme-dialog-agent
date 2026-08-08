@@ -90,6 +90,10 @@ for scientific interpretation and every downstream decision.
 
 ## Quick start
 
+New contributors can use the [15-minute no-key onboarding path](docs/contributor-quick-start.md)
+to exercise Single, Batch, Assistant, and evidence workflows with checked
+example outputs.
+
 The most reproducible path requires Docker Desktop or Docker Engine with
 Compose 2.22 or newer:
 
@@ -325,6 +329,7 @@ make smoke-real  run one real ADMET-AI prediction
 make backend     start FastAPI on port 8000
 make frontend    start Next.js on port 3000
 make dev         start and stop both services together
+make onboarding  start the no-key walkthrough with Mock Agent v1
 make verify      run the default documentation, backend, Agent, and frontend gate
 make check       compatibility alias for make verify
 make container-up     build and start the pinned Compose environment
