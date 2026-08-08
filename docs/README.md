@@ -39,6 +39,7 @@ remain the executable source of truth when a document is accidentally stale.
 - [Agent documentation index](agent/00_README_AGENT_DOCS.md)
 - [Backend core architecture](agent/backend-core-architecture.md)
 - [Backend API](agent/backend-api.md)
+- [Agent database migrations and recovery](agent/database-migrations.md)
 - [Session and confirmation model](agent/session-and-confirmation.md)
 - [Tool reference](agent/tool-reference.md)
 - [Frontend Assistant contract](agent/frontend-assistant-contract.md)

@@ -257,24 +257,6 @@ def test_late_session_owned_write_has_stable_not_found_error(tmp_path) -> None:
     assert missing.value.code == "SESSION_NOT_FOUND"
 
 
-def test_schema_v2_is_migrated_to_hashed_deletion_receipts(tmp_path) -> None:
-    path = tmp_path / "agent.sqlite3"
-    repository = AgentRepository(path)
-    with repository.connection() as connection:
-        connection.execute("DROP TABLE agent_session_deletions")
-        connection.execute("UPDATE agent_schema SET version = 2")
-        connection.commit()
-
-    migrated = AgentRepository(path)
-    with migrated.connection() as connection:
-        version = connection.execute("SELECT version FROM agent_schema").fetchone()[0]
-        table = connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_session_deletions'"
-        ).fetchone()
-    assert version == 3
-    assert table is not None
-
-
 def test_deletion_api_returns_stable_receipt_on_retry(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("AGENT_ENABLED", "true")
     monkeypatch.setenv("AGENT_DB_PATH", str(tmp_path / "agent.sqlite3"))

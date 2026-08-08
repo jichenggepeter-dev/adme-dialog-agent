@@ -10,9 +10,9 @@ from typing import Any, Iterator
 from uuid import uuid4
 
 from app.agent_runtime.errors import AgentCoreError
+from app.agent_runtime.migrations import initialize_database
 
 
-SCHEMA_VERSION = 3
 DEFAULT_SESSION_TTL_SECONDS = 24 * 60 * 60
 DEFAULT_CONFIRMATION_TTL_SECONDS = 15 * 60
 DEFAULT_RESOURCE_TTL_SECONDS = 24 * 60 * 60
@@ -44,124 +44,7 @@ class AgentRepository:
 
     def _initialize(self) -> None:
         with self.connection() as connection:
-            connection.executescript(
-                """
-                CREATE TABLE IF NOT EXISTS agent_schema (
-                    version INTEGER NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS agent_sessions (
-                    session_id TEXT PRIMARY KEY,
-                    status TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    last_access_at TEXT NOT NULL,
-                    expires_at TEXT NOT NULL,
-                    state_version INTEGER NOT NULL DEFAULT 0
-                );
-                CREATE TABLE IF NOT EXISTS agent_messages (
-                    message_id TEXT PRIMARY KEY,
-                    session_id TEXT NOT NULL REFERENCES agent_sessions(session_id),
-                    role TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    metadata_json TEXT NOT NULL,
-                    created_at TEXT NOT NULL
-                );
-                CREATE INDEX IF NOT EXISTS idx_agent_messages_session
-                    ON agent_messages(session_id, created_at);
-                CREATE TABLE IF NOT EXISTS agent_business_state (
-                    session_id TEXT PRIMARY KEY REFERENCES agent_sessions(session_id),
-                    state_json TEXT NOT NULL,
-                    version INTEGER NOT NULL,
-                    updated_at TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS agent_confirmations (
-                    confirmation_id TEXT PRIMARY KEY,
-                    session_id TEXT NOT NULL REFERENCES agent_sessions(session_id),
-                    type TEXT NOT NULL,
-                    status TEXT NOT NULL,
-                    payload_json TEXT NOT NULL,
-                    payload_hash TEXT NOT NULL,
-                    canonical_smiles TEXT NOT NULL,
-                    expected_state_version INTEGER NOT NULL,
-                    created_at TEXT NOT NULL,
-                    expires_at TEXT NOT NULL,
-                    consumed_at TEXT,
-                    version INTEGER NOT NULL DEFAULT 0,
-                    result_resource_id TEXT,
-                    error_code TEXT
-                );
-                CREATE INDEX IF NOT EXISTS idx_agent_confirmations_session
-                    ON agent_confirmations(session_id, created_at);
-                CREATE TABLE IF NOT EXISTS agent_pending_actions (
-                    action_id TEXT PRIMARY KEY,
-                    session_id TEXT NOT NULL REFERENCES agent_sessions(session_id),
-                    action_type TEXT NOT NULL,
-                    status TEXT NOT NULL,
-                    payload_json TEXT NOT NULL,
-                    payload_hash TEXT NOT NULL,
-                    expected_state_version INTEGER NOT NULL,
-                    created_at TEXT NOT NULL,
-                    expires_at TEXT NOT NULL,
-                    consumed_at TEXT
-                );
-                CREATE TABLE IF NOT EXISTS agent_resources (
-                    resource_id TEXT PRIMARY KEY,
-                    session_id TEXT NOT NULL REFERENCES agent_sessions(session_id),
-                    resource_type TEXT NOT NULL,
-                    content_json TEXT NOT NULL,
-                    content_hash TEXT NOT NULL,
-                    size_bytes INTEGER NOT NULL,
-                    created_at TEXT NOT NULL,
-                    expires_at TEXT NOT NULL
-                );
-                CREATE INDEX IF NOT EXISTS idx_agent_resources_session
-                    ON agent_resources(session_id, created_at);
-                CREATE TABLE IF NOT EXISTS agent_audit_events (
-                    event_id TEXT PRIMARY KEY,
-                    session_id TEXT REFERENCES agent_sessions(session_id),
-                    correlation_id TEXT NOT NULL,
-                    event_type TEXT NOT NULL,
-                    model TEXT,
-                    tool_name TEXT,
-                    duration_ms INTEGER,
-                    status TEXT NOT NULL,
-                    error_code TEXT,
-                    summary_json TEXT NOT NULL,
-                    created_at TEXT NOT NULL
-                );
-                CREATE TABLE IF NOT EXISTS agent_session_deletions (
-                    session_hash TEXT PRIMARY KEY,
-                    action_hash TEXT NOT NULL,
-                    deleted_at TEXT NOT NULL,
-                    counts_json TEXT NOT NULL
-                );
-                """
-            )
-            row = connection.execute("SELECT version FROM agent_schema LIMIT 1").fetchone()
-            if row is None:
-                connection.execute(
-                    "INSERT INTO agent_schema(version) VALUES (?)", (SCHEMA_VERSION,)
-                )
-            else:
-                version = row["version"]
-                if version == 1:
-                    connection.execute(
-                        "ALTER TABLE agent_confirmations ADD COLUMN version INTEGER NOT NULL DEFAULT 0"
-                    )
-                    connection.execute(
-                        "ALTER TABLE agent_confirmations ADD COLUMN result_resource_id TEXT"
-                    )
-                    connection.execute(
-                        "ALTER TABLE agent_confirmations ADD COLUMN error_code TEXT"
-                    )
-                    version = 2
-                if version == 2:
-                    version = 3
-                if version != SCHEMA_VERSION:
-                    raise AgentCoreError(
-                        "AGENT_SCHEMA_MISMATCH", "Agent database schema is incompatible.", 500
-                    )
-                connection.execute("UPDATE agent_schema SET version = ?", (version,))
-            connection.commit()
+            initialize_database(connection)
 
     def create_session(self, ttl_seconds: int = DEFAULT_SESSION_TTL_SECONDS) -> dict:
         now = _now()
