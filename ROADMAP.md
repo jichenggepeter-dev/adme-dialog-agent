@@ -38,7 +38,7 @@ giving up control.
 - [ ] Reproducible Agent evaluation dataset and runner.
 - [ ] Confirmation, scientific-language, and provider-failure evaluations.
 - [ ] Automated accessibility checks.
-- [ ] Privacy and safety regression coverage.
+- [x] Privacy and safety regression coverage.
 
 ## v0.3.0: Contributor experience
 
