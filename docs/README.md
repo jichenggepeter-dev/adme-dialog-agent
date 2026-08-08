@@ -28,6 +28,7 @@ remain the executable source of truth when a document is accidentally stale.
 - [Computational summary rules](computational-summary-rules.md)
 - [ADME evidence RAG](evidence-rag.md)
 - [Keyless PR Review App](review-app.md)
+- [Accessibility testing](accessibility-testing.md)
 - [Course demonstration guide](course-demonstration-guide.md)
 
 ## Current Agent contracts

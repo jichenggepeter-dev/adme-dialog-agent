@@ -142,3 +142,7 @@ jobs:
       - name: Exercise real frontend-to-API Mock Agent flow
         working-directory: frontend
         run: npm run test:e2e -- review-app-mock.spec.ts --project=desktop
+
+      - name: Run desktop and mobile accessibility checks
+        working-directory: frontend
+        run: npm run test:a11y
