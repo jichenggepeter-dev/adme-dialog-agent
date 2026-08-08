@@ -49,6 +49,14 @@ jobs:
         env:
           AGENT_DB_PATH: ${{ runner.temp }}/adme-dialog-agent.sqlite3
 
+      - name: Run deterministic Agent evaluation
+        run: >-
+          python scripts/evaluate_agent.py
+          --mode deterministic_rules
+          --mode mock_provider
+          --json-output "${RUNNER_TEMP}/agent-eval.json"
+          --markdown-output "${RUNNER_TEMP}/agent-eval.md"
+
   frontend:
     name: Frontend checks
     runs-on: ubuntu-latest

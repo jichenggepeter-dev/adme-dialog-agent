@@ -35,7 +35,7 @@ giving up control.
 - [x] Deterministic mock Agent provider for no-key development.
 - [x] Conversation and session export.
 - [x] Conversation and session deletion.
-- [ ] Reproducible Agent evaluation dataset and runner.
+- [x] Reproducible Agent evaluation dataset and runner.
 - [ ] Confirmation, scientific-language, and provider-failure evaluations.
 - [ ] Automated accessibility checks.
 - [x] Privacy and safety regression coverage.
