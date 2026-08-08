@@ -131,6 +131,7 @@ Open:
 - Batch screening: `http://localhost:3000/batch`
 - Model information: `http://localhost:3000/about`
 - Backend API docs: `http://127.0.0.1:8000/docs`
+- Versioned API contract: [REST and Agent API v1](docs/api/v1/README.md)
 
 The Docker environment and `.env.example` both keep the Agent disabled and use
 mock predictions, so the first run does not need a model-provider API key.
@@ -432,6 +433,8 @@ have reviewed that provider's privacy and retention terms. See
 ## Documentation
 
 - [Documentation index](docs/README.md)
+- [Versioned API contract v1](docs/api/v1/README.md)
+- [API change and migration policy](docs/api/versioning-and-migrations.md)
 - [Project positioning](docs/project-positioning.md)
 - [Testing guide](docs/testing-guide.md)
 - [Agent documentation](docs/agent/00_README_AGENT_DOCS.md)

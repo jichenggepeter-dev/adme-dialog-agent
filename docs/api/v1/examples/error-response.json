@@ -1,0 +1,9 @@
+{
+  "error": {
+    "code": "ACTION_STALE",
+    "message": "The proposed action no longer matches the current session state.",
+    "details": null,
+    "retryable": false,
+    "correlation_id": "corr_example"
+  }
+}

@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from app.agent import handle_chat_message, predict_adme
+from app.api_contract import API_CONTRACT_VERSION
 from app.formatter import DISCLAIMER, generate_summary, group_predictions
 from app.schemas import BatchFilteredExportRequest, BatchJobCreateRequest, BatchPredictRequest, ChatRequest, ChatResponse, CompoundResolveRequest, CompoundResponse, PredictRequest, PredictionResponse, StatusResponse
 from app.tools.batch import BatchError, batch_capabilities, cancel_job, create_job, create_upload, export_job, get_job, run_job_thread
@@ -23,7 +24,14 @@ from app.agent_runtime.routes import router as agent_router
 BACKEND_VERSION = "0.1.0"
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="ADME Dialog Agent", version=BACKEND_VERSION)
+app = FastAPI(
+    title="ADME Dialog Agent",
+    version=API_CONTRACT_VERSION,
+    description=(
+        "Versioned REST API for local ADME/ADMET exploration. "
+        "The application release and API contract are versioned independently."
+    ),
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
