@@ -10,7 +10,7 @@ export function registerAssistantCapabilities(route: string, capability: RouteCa
 }
 
 export function getAssistantCapability(route: string): RouteCapability | undefined { return capabilities.get(route); }
-export async function waitForAssistantCapability(route: string, timeoutMs = 4_000): Promise<RouteCapability | null> {
+export async function waitForAssistantCapability(route: string, timeoutMs = 10_000): Promise<RouteCapability | null> {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
     const capability = capabilities.get(route); if (capability) return capability;

@@ -50,6 +50,16 @@ def test_settings_are_explicit_and_agent_defaults_off(monkeypatch: pytest.Monkey
     assert settings.hosted_tracing_disabled is True
 
 
+def test_hosted_tracing_is_disabled_when_setting_is_omitted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    apply_env(monkeypatch)
+    monkeypatch.delenv("OPENAI_AGENTS_DISABLE_TRACING")
+    get_agent_settings.cache_clear()
+
+    assert get_agent_settings().hosted_tracing_disabled is True
+
+
 def test_live_provider_mode_is_the_default_and_keeps_required_settings(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
